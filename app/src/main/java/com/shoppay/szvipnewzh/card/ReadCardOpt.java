@@ -131,12 +131,12 @@ public class ReadCardOpt extends Activity {
                     } else {
                         /***************Mag磁条卡*********************/
                         mCardNumber = payCardInfo.track2;
-                        if (mCardNumber.length() < 10) {
-                            int i = 10 - mCardNumber.length();
-                            for (; i > 0; i--) {
-                                mCardNumber = "0" + mCardNumber;
-                            }
-                        }
+//                        if (mCardNumber.length() < 10) {
+//                            int i = 10 - mCardNumber.length();
+//                            for (; i > 0; i--) {
+//                                mCardNumber = "0" + mCardNumber;
+//                            }
+//                        }
                         textView.setText(mCardNumber);
                     }
                     break;
