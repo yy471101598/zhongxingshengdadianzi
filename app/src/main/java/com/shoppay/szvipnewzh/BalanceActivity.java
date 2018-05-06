@@ -2,6 +2,7 @@ package com.shoppay.szvipnewzh;
 
 
 import android.app.Dialog;
+import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -42,7 +43,11 @@ import com.shoppay.szvipnewzh.bean.Zhekou;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
 import com.shoppay.szvipnewzh.db.DBAdapter;
 import com.shoppay.szvipnewzh.http.InterfaceBack;
+import com.shoppay.szvipnewzh.tools.ActivityStack;
+import com.shoppay.szvipnewzh.tools.BluetoothUtil;
 import com.shoppay.szvipnewzh.tools.CommonUtils;
+import com.shoppay.szvipnewzh.tools.DateUtils;
+import com.shoppay.szvipnewzh.tools.DayinUtils;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.ESCUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
@@ -136,6 +141,8 @@ public class BalanceActivity extends FragmentActivity implements
     private MsgReceiver msgReceiver;
     private Dialog weixinDialog;
     private TextView tv_dingwei;
+    private String orderAccount;
+    private String paytype;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,7 +156,7 @@ public class BalanceActivity extends FragmentActivity implements
         PreferenceHelper.write(ac, "shoppay", "vipcar", "无");
         PreferenceHelper.write(ac, "shoppay", "vipname", "散客");
         PreferenceHelper.write(context, "shoppay", "viptoast", "未查询到会员");
-        mPosition=0;
+        mPosition = 0;
         dbAdapter.deleteShopCar();
         initView();
         // 注册广播
@@ -227,12 +234,9 @@ public class BalanceActivity extends FragmentActivity implements
 
     @Override
     protected void onStop() {
-        try
-        {
+        try {
             new ReadCardOpt().overReadCard();
-        }
-        catch (RemoteException e)
-        {
+        } catch (RemoteException e) {
             e.printStackTrace();
         }
         super.onStop();
@@ -240,7 +244,7 @@ public class BalanceActivity extends FragmentActivity implements
             //每次editText有变化的时候，则移除上次发出的延迟线程
             handler.removeCallbacks(delayRun);
         }
-        if(shopRun!=null){
+        if (shopRun != null) {
             handler.removeCallbacks(shopRun);
         }
     }
@@ -279,7 +283,7 @@ public class BalanceActivity extends FragmentActivity implements
         } else {
             params.put("memid", PreferenceHelper.readString(context, "shoppay", "memid", "0"));
         }
-        params.put("GoodsCode",shopString);
+        params.put("GoodsCode", shopString);
         LogUtils.d("xxparams", params.toString());
         String url = UrlTools.obtainUrl(context, "?Source=3", "GetGoodsInfos");
         LogUtils.d("xxurl", url);
@@ -301,7 +305,8 @@ public class BalanceActivity extends FragmentActivity implements
                         handler.sendMessage(msg);
 
 
-                    } else {   Message msg = handler.obtainMessage();
+                    } else {
+                        Message msg = handler.obtainMessage();
                         msg.what = 4;
                         handler.sendMessage(msg);
                     }
@@ -323,8 +328,8 @@ public class BalanceActivity extends FragmentActivity implements
     }
 
     private void handlerShopMsg(Zhekou zhekou) {
-        for(int i=0;i<list.size();i++){
-            if(zhekou.GoodsClassID.equals(list.get(i).ClassID)){
+        for (int i = 0; i < list.size(); i++) {
+            if (zhekou.GoodsClassID.equals(list.get(i).ClassID)) {
                 listView.setSelection(i);
                 mPosition = i;
                 //即使刷新adapter
@@ -334,15 +339,15 @@ public class BalanceActivity extends FragmentActivity implements
                         .beginTransaction();
                 fragmentTransaction.replace(R.id.fragment_container, myFragment);
                 Bundle bundle = new Bundle();
-                List<Shop> shoplist=new CopyOnWriteArrayList<>();
+                List<Shop> shoplist = new CopyOnWriteArrayList<>();
                 shoplist.addAll(list.get(mPosition).GoodsList);
-                for(Shop sp:shoplist){
-                    if(sp.GoodsCode.equals(zhekou.GoodsCode)){
+                for (Shop sp : shoplist) {
+                    if (sp.GoodsCode.equals(zhekou.GoodsCode)) {
                         shoplist.remove(sp);
-                        shoplist.add(0,sp);
+                        shoplist.add(0, sp);
                     }
                 }
-                List<Shop> li=new ArrayList<>();
+                List<Shop> li = new ArrayList<>();
                 li.addAll(shoplist);
                 bundle.putSerializable(BalanceFragment.TAG, (Serializable) li);
                 bundle.putString("isSan", type);
@@ -421,7 +426,7 @@ public class BalanceActivity extends FragmentActivity implements
         tv_yes = (TextView) findViewById(R.id.tv_yes);
         tv_no = (TextView) findViewById(R.id.tv_no);
         tv_title = (TextView) findViewById(R.id.tv_title);
-        tv_dingwei= (TextView) findViewById(R.id.vip_tv_dingwei);
+        tv_dingwei = (TextView) findViewById(R.id.vip_tv_dingwei);
         tv_title.setText("商品消费");
         li_jifen = (LinearLayout) findViewById(R.id.balance_li_jifen);
         et_card = (EditText) findViewById(R.id.balance_et_card);
@@ -444,24 +449,20 @@ public class BalanceActivity extends FragmentActivity implements
                                 Toast.makeText(ac, "您选择的是会员结算，请确认会员信息是否正确", Toast.LENGTH_SHORT).show();
                             } else {//会员结算
 //
-                                    ShopXiaofeiDialog.jiesuanDialog(true, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
-                                        @Override
-                                        public void onResponse(Object response) {
-                                            finish();
-                                        }
-
-                                        @Override
-                                        public void onErrorResponse(Object msg) {
-
-                                        }
-                                    });
-                            }
-                        } else {//散客结算
-                                ShopXiaofeiDialog.jiesuanDialog(false, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                                ShopXiaofeiDialog.jiesuanDialog(true, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                     @Override
                                     public void onResponse(Object response) {
-
-                                        finish();
+                                        if (response.toString().equals("wxpay")) {
+                                            paytype = "wx";
+                                            Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                                            startActivityForResult(mipca, 333);
+                                        } else if (response.toString().equals("zfbpay")) {
+                                            paytype = "zfb";
+                                            Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                                            startActivityForResult(mipca, 333);
+                                        } else {
+                                            finish();
+                                        }
                                     }
 
                                     @Override
@@ -469,6 +470,29 @@ public class BalanceActivity extends FragmentActivity implements
 
                                     }
                                 });
+                            }
+                        } else {//散客结算
+                            ShopXiaofeiDialog.jiesuanDialog(false, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                                @Override
+                                public void onResponse(Object response) {
+                                    if (response.toString().equals("wxpay")) {
+                                        paytype = "wx";
+                                        Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                                        startActivityForResult(mipca, 333);
+                                    } else if (response.toString().equals("zfbpay")) {
+                                        paytype = "zfb";
+                                        Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                                        startActivityForResult(mipca, 333);
+                                    } else {
+                                        finish();
+                                    }
+                                }
+
+                                @Override
+                                public void onErrorResponse(Object msg) {
+
+                                }
+                            });
                         }
                     } else {
                         Toast.makeText(getApplicationContext(), "请检查网络是否可用",
@@ -553,7 +577,167 @@ public class BalanceActivity extends FragmentActivity implements
                     et_shopcode.setText(data.getStringExtra("codedata"));
                 }
                 break;
+            case 333:
+                if (resultCode == RESULT_OK) {
+                    pay(data.getStringExtra("codedata"));
+                }
+                break;
         }
+    }
+
+    private void pay(String codedata) {
+        dialog.show();
+        AsyncHttpClient client = new AsyncHttpClient();
+        final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
+        client.setCookieStore(myCookieStore);
+        RequestParams map = new RequestParams();
+        map.put("auth_code", codedata);
+        map.put("UserID", PreferenceHelper.readString(ac, "shoppay", "UserID", ""));
+//        （1会员充值7商品消费9快速消费11会员充次）
+        map.put("ordertype", 7);
+        orderAccount = DateUtils.getCurrentTime("yyyyMMddHHmmss");
+        map.put("account", orderAccount);
+        map.put("money", tv_money.getText().toString());
+//        0=现金 1=银联 2=微信 3=支付宝
+        switch (paytype) {
+            case "wx":
+                map.put("payType", 2);
+                break;
+            case "zfb":
+                map.put("payType", 3);
+                break;
+        }
+        client.setTimeout(120*1000);
+        LogUtils.d("xxparams", map.toString());
+        String url = UrlTools.obtainUrl(ac, "?Source=3", "PayOnLine");
+        LogUtils.d("xxurl", url);
+        client.post(url, map, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                try {
+                    dialog.dismiss();
+                    LogUtils.d("xxpayS", new String(responseBody, "UTF-8"));
+                    JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
+                    if (jso.getInt("flag") == 1) {
+
+                        JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
+                        DayinUtils.dayin(jsonObject.getString("printContent"));
+                        if (jsonObject.getInt("printNumber") == 0) {
+                        } else {
+                            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                            if (bluetoothAdapter.isEnabled()) {
+                                BluetoothUtil.connectBlueTooth(MyApplication.context);
+                                BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
+                            } else {
+                            }
+                        }
+                        jiesuan(orderAccount);
+                    } else {
+                        Toast.makeText(ac, jso.getString("msg"), Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                dialog.dismiss();
+                Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private  void jiesuan(String orderNum){
+         dialog.show();
+        AsyncHttpClient client = new AsyncHttpClient();
+        final PersistentCookieStore myCookieStore = new PersistentCookieStore(context);
+        client.setCookieStore(myCookieStore);
+        final DBAdapter dbAdapter = DBAdapter.getInstance(context);
+        List<ShopCar> list = dbAdapter.getListShopCar(PreferenceHelper.readString(context, "shoppay", "account", "123"));
+        List<ShopCar> shoplist = new ArrayList<>();
+        double yfmoney = 0.0;
+        double zfmoney = 0.0;
+        int point=0;
+        int num = 0;
+        for (ShopCar numShop : list) {
+            if (numShop.count == 0) {
+            } else {
+                shoplist.add(numShop);
+                zfmoney = CommonUtils.add(zfmoney, Double.parseDouble(numShop.discountmoney));
+                yfmoney = CommonUtils.add(yfmoney, Double.parseDouble(CommonUtils.multiply(numShop.count + "", numShop.price)));
+                num = num + numShop.count;
+                point=point+(int)numShop.point;
+            }
+        }
+        RequestParams params = new RequestParams();
+        params.put("MemID", PreferenceHelper.readString(context, "shoppay", "memid", ""));
+        params.put("OrderAccount", orderNum);
+        params.put("TotalMoney", yfmoney);
+        params.put("DiscountMoney", zfmoney);
+        params.put("OrderPoint", point);
+        switch (paytype) {
+            case "wx":
+                params.put("payType", 2);
+                break;
+            case "zfb":
+                params.put("payType", 3);
+                break;
+        }
+        params.put("UserPwd", "");
+        params.put("GlistCount", shoplist.size());
+        LogUtils.d("xxparams",shoplist.size()+"");
+        for (int i = 0; i < shoplist.size(); i++) {
+            LogUtils.d("xxparams",shoplist.get(i).discount);
+            params.put("Glist[" + i + "][GoodsID]", shoplist.get(i).goodsid);
+            params.put("Glist[" + i + "][number]", shoplist.get(i).count);
+            params.put("Glist[" + i + "][GoodsPoint]", point);
+            params.put("Glist[" + i + "][discountedprice]", shoplist.get(i).discount);
+            params.put("Glist[" + i + "][Price]", shoplist.get(i).discountmoney);
+            params.put("Glist[" + i + "][GoodsPrice]", shoplist.get(i).price);
+        }
+        LogUtils.d("xxparams", params.toString());
+        String url = UrlTools.obtainUrl(context, "?Source=3", "GoodsExpense");
+        LogUtils.d("xxurl", url);
+        client.post(url, params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                try {
+                    dialog.dismiss();
+                    LogUtils.d("xxjiesuanS", new String(responseBody, "UTF-8"));
+                    JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
+                    if (jso.getInt("flag") == 1) {
+                        Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
+                        JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
+                        if (jsonObject.getInt("printNumber") == 0) {
+                            dbAdapter.deleteShopCar();
+                        } else {
+                            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                            if (bluetoothAdapter.isEnabled()) {
+                                BluetoothUtil.connectBlueTooth(MyApplication.context);
+                                BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
+                                dbAdapter.deleteShopCar();
+                            } else {
+                                dbAdapter.deleteShopCar();
+                            }
+                        }
+                       finish();
+                    }else{
+                        Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
+                    }
+                } catch (Exception e) {
+                    dialog.dismiss();
+                }
+//				printReceipt_BlueTooth(context,xfmoney,yfmoney,jf,et_zfmoney,et_yuemoney,tv_dkmoney,et_jfmoney);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                dialog.dismiss();
+                Toast.makeText(context, "结算失败，请重新结算",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -618,7 +802,6 @@ public class BalanceActivity extends FragmentActivity implements
                 break;
         }
     }
-
 
 
     private void obtainShopClass() {
@@ -688,7 +871,7 @@ public class BalanceActivity extends FragmentActivity implements
                 } else {
                     num = num + shopCar.count;
                     money = money + Double.parseDouble(shopCar.discountmoney);
-                    LogUtils.d("xxJifen",shopCar.point+"");
+                    LogUtils.d("xxJifen", shopCar.point + "");
                     jifen = jifen + shopCar.point;
                     xfmoney = xfmoney + shopCar.count * Double.parseDouble(shopCar.price);
                 }

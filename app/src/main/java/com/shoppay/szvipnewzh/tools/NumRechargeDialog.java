@@ -42,7 +42,6 @@ import cz.msebera.android.httpclient.Header;
 public class NumRechargeDialog {
     public static boolean isMoney = true, isYue = false, isZhifubao = false, isYinlian = false, isQita = false, isWx = false;
     public static Dialog dialog;
-   public static boolean isClick=true;
     public static Dialog jiesuanDialog(final Dialog loading,final Context context,
                                        int showingLocation, final String type,final double yfmoney, final InterfaceBack handler) {
         final Dialog dialog;
@@ -63,7 +62,6 @@ public class NumRechargeDialog {
         RadioButton rb_yue= (RadioButton)view. findViewById(R.id.rb_yue);
         RadioButton rb_qita= (RadioButton)view. findViewById(R.id.rb_qita);
 
-        isClick=true;
         if(LoginActivity.sysquanxian.isweixin==0){
             rb_wx.setVisibility(View.GONE);
         }
@@ -154,9 +152,9 @@ public class NumRechargeDialog {
         });
         tv_yfmoney.setText(StringUtil.twoNum(yfmoney + ""));
         et_zfmoney.setText(StringUtil.twoNum(yfmoney + ""));
-        rl_jiesuan.setOnClickListener(new View.OnClickListener() {
+        rl_jiesuan.setOnClickListener(new NoDoubleClickListener() {
             @Override
-            public void onClick(View view) {
+            protected void onNoDoubleClick(View view) {
                 if (CommonUtils.checkNet(context)) {
                     if (Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(et_zfmoney.getText().toString()) < 0) {
                         Toast.makeText(context, "超过应付金额，请检查输入信息",
@@ -172,9 +170,7 @@ public class NumRechargeDialog {
                             DialogUtil.pwdDialog( context, 1, new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
-                                    if(isClick) {
-                                        jiesuan(loading, type, handler, dialog, context, response.toString());
-                                    }
+                                        jiesuan(loading, type, handler, dialog, context, response.toString(),DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
 
                                 @Override
@@ -183,9 +179,23 @@ public class NumRechargeDialog {
                                 }
                             });
                         } else {
-                     if(isClick) {
-                         jiesuan(loading, type, handler, dialog, context, "");
-                     }
+                            if(isWx){
+                                if(LoginActivity.sysquanxian.iswxpay==1){
+                                    handler.onResponse("wxpay");
+                                    dialog.dismiss();
+                                }else {
+                                    jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                }
+                            }else if(isZhifubao){
+                                if(LoginActivity.sysquanxian.iszfbpay==1){
+                                    handler.onResponse("zfbpay");
+                                    dialog.dismiss();
+                                }else {
+                                    jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                }
+                            }else {
+                                jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                            }
                         }
                     }
                 } else {
@@ -194,6 +204,7 @@ public class NumRechargeDialog {
                 }
             }
         });
+
         Window window = dialog.getWindow();
         switch (showingLocation) {
             case 0:
@@ -228,9 +239,8 @@ public class NumRechargeDialog {
   }
 
 
-    public static void jiesuan(final  Dialog loading,String type,final InterfaceBack handle, final Dialog dialog, final Context context, final String pwd) {
+    public static void jiesuan(final  Dialog loading,String type,final InterfaceBack handle, final Dialog dialog, final Context context, final String pwd,final String orderNum) {
        loading.show();
-        isClick=false;
         if(type.equals("num")) {
             AsyncHttpClient client = new AsyncHttpClient();
             final PersistentCookieStore myCookieStore = new PersistentCookieStore(context);
@@ -252,7 +262,7 @@ public class NumRechargeDialog {
             }
             RequestParams params = new RequestParams();
             params.put("MemID", PreferenceHelper.readString(context, "shoppay", "memid", ""));
-            params.put("OrderAccount", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+            params.put("OrderAccount", orderNum);
             params.put("TotalMoney", yfmoney);
             params.put("DiscountMoney", zfmoney);
             params.put("OrderPoint", "");
@@ -310,11 +320,9 @@ public class NumRechargeDialog {
                             }
                         }else{
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
-                            isClick=true;
                         }
                     } catch (Exception e) {
                         loading.dismiss();
-                        isClick=true;
                     }
 //				printReceipt_BlueTooth(context,xfmoney,yfmoney,jf,et_zfmoney,et_yuemoney,tv_dkmoney,et_jfmoney);
                 }
@@ -322,7 +330,6 @@ public class NumRechargeDialog {
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                     loading.dismiss();
-                    isClick=true;
                     Toast.makeText(context, "结算失败，请重新结算",
                             Toast.LENGTH_SHORT).show();
                 }
@@ -350,7 +357,7 @@ public class NumRechargeDialog {
             }
             RequestParams params = new RequestParams();
             params.put("MemID", PreferenceHelper.readString(context, "shoppay", "memid", ""));
-            params.put("OrderAccount", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+            params.put("OrderAccount", orderNum);
             params.put("TotalMoney", yfmoney);
             params.put("DiscountMoney", zfmoney);
             params.put("OrderPoint", point);
@@ -408,11 +415,9 @@ public class NumRechargeDialog {
                                 }
                             }
                         }else{
-                            isClick=true;
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
-                        isClick=true;
                         loading.dismiss();
                     }
 //				printReceipt_BlueTooth(context,xfmoney,yfmoney,jf,et_zfmoney,et_yuemoney,tv_dkmoney,et_jfmoney);
@@ -421,7 +426,6 @@ public class NumRechargeDialog {
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                     loading.dismiss();
-                    isClick=true;
                     Toast.makeText(context, "结算失败，请重新结算",
                             Toast.LENGTH_SHORT).show();
                 }

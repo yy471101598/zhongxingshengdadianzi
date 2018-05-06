@@ -14,6 +14,8 @@ public class SystemQuanxian implements Serializable{
 //    1.5是否允许支付宝付
 //    1.6是否允许微信支付
 //    1.7是否启用密码验证
+//    1.8 是否微信支付为标记模式
+//    1.9 是否支付宝支付为标记模式
 
     public int ischangemoney;
     public int isyue;
@@ -23,4 +25,6 @@ public class SystemQuanxian implements Serializable{
     public int iszhifubao;
     public int ispassword;
     public int isqita;
+    public int iswxpay;
+    public int iszfbpay;
 }

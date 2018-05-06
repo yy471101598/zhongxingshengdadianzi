@@ -349,6 +349,12 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                                 case "1.7":
                                     sysquanxian.ispassword = value;
                                     break;
+                                case "1.8":
+                                    sysquanxian.iswxpay = value;
+                                    break;
+                                case "1.9":
+                                    sysquanxian.iszfbpay = value;
+                                    break;
                             }
                         }
 

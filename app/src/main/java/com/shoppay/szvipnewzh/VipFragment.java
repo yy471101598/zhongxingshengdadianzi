@@ -1,5 +1,6 @@
 package com.shoppay.szvipnewzh;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -46,6 +47,7 @@ import com.shoppay.szvipnewzh.tools.NoDoubleClickListener;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.StringUtil;
 import com.shoppay.szvipnewzh.tools.UrlTools;
+import com.shoppay.szvipnewzh.wxcode.MipcaActivityCapture;
 
 import org.json.JSONObject;
 
@@ -57,7 +59,7 @@ import static com.shoppay.szvipnewzh.tools.DialogUtil.money;
  * Created by songxiaotao on 2017/7/1.
  */
 
-public class VipFragment extends Fragment implements View.OnClickListener {
+public class VipFragment extends Fragment  {
     private EditText et_card, et_xfmoney, et_zfmoney, et_yuemoney, et_jfmoney;
     private TextView tv_vipname, tv_vipjf, tv_zhmoney, tv_maxdk, tv_dkmoney, tv_obtainjf, tv_vipyue, tv_jiesuan, tv_vipdengji;
     private RelativeLayout rl_jiesuan;
@@ -119,6 +121,7 @@ public class VipFragment extends Fragment implements View.OnClickListener {
     private RadioGroup mRadiogroup;
     private String password = "";
     private MsgReceiver msgReceiver;
+    private String orderAccount;
     //    private Intent intent;
 //    private Dialog weixinDialog;
 
@@ -215,7 +218,7 @@ public class VipFragment extends Fragment implements View.OnClickListener {
 
                 } else {
                     if (tv_zhmoney.getText().toString().equals("0.00") || tv_zhmoney.getText().toString().equals("获取中")) {
-                        Toast.makeText(MyApplication.context, "请先输入消费金额，获取折后金额", Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(MyApplication.context, "请先输入消费金额，获取折后金额", Toast.LENGTH_SHORT).show();
                         et_zfmoney.setText("");
                     } else {
                         if (et_zfmoney.getText().toString() == null || et_zfmoney.getText().toString().equals("")) {
@@ -475,7 +478,7 @@ public class VipFragment extends Fragment implements View.OnClickListener {
                                         @Override
                                         public void onResponse(Object response) {
                                             password = (String) response;
-                                            jiesuan();
+                                            jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                         }
 
                                         @Override
@@ -484,7 +487,27 @@ public class VipFragment extends Fragment implements View.OnClickListener {
                                         }
                                     });
                             } else {
-                                    jiesuan();
+                                if(isWx){
+                                    if(LoginActivity.sysquanxian.iswxpay==1){
+                                        Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
+                                        mipca.putExtra("type","pay");
+                                        startActivityForResult(mipca, 222);
+                                    }else {
+                                        jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                    }
+                                }else if(isZhifubao){
+                                    if(LoginActivity.sysquanxian.iszfbpay==1){
+                                        Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
+                                        mipca.putExtra("type","pay");
+                                        startActivityForResult(mipca, 222);
+                                    }else {
+                                        jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                    }
+                                }else {
+                                    jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                }
+
+
                             }
                         }
                     } else {
@@ -498,67 +521,14 @@ public class VipFragment extends Fragment implements View.OnClickListener {
 
 
 
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.vip_rl_jiesuan:
-                if (et_card.getText().toString().equals("")
-                        || et_card.getText().toString() == null) {
-                    Toast.makeText(MyApplication.context, "请输入会员卡号",
-                            Toast.LENGTH_SHORT).show();
-                } else if (et_xfmoney.getText().toString().equals("")
-                        || et_xfmoney.getText().toString() == null) {
-                    Toast.makeText(MyApplication.context, "请输入消费金额",
-                            Toast.LENGTH_SHORT).show();
-                } else if (isYue && Double.parseDouble(tv_zhmoney.getText().toString()) - Double.parseDouble(tv_vipyue.getText().toString()) > 0) {
-
-                    Toast.makeText(MyApplication.context, "余额不足",
-                            Toast.LENGTH_SHORT).show();
-                } else {
-                    if (CommonUtils.checkNet(MyApplication.context)) {
-                        if (Double.parseDouble(tv_zhmoney.getText().toString()) - money > 0) {
-                            Toast.makeText(MyApplication.context, "少于折后金额，请检查输入信息",
-                                    Toast.LENGTH_SHORT).show();
-                        } else if(Double.parseDouble(tv_zhmoney.getText().toString()) - money <0){
-                            Toast.makeText(MyApplication.context, "大于折后金额，请检查输入信息",
-                                    Toast.LENGTH_SHORT).show();
-                        }else {
-
-                            if (isYue && LoginActivity.sysquanxian.ispassword == 1) {
-                                    DialogUtil.pwdDialog(getActivity(), 1, new InterfaceBack() {
-                                        @Override
-                                        public void onResponse(Object response) {
-                                            password = (String) response;
-                                            jiesuan();
-                                        }
-
-                                        @Override
-                                        public void onErrorResponse(Object msg) {
-
-                                        }
-                                    });
-                            } else {
-                                    jiesuan();
-                            }
-                        }
-                    } else {
-                        Toast.makeText(MyApplication.context, "请检查网络是否可用",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-                break;
-        }
-    }
-
-
-    private void jiesuan() {
+    private void jiesuan(String orderNum) {
         dialog.show();
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(MyApplication.context);
         client.setCookieStore(myCookieStore);
         RequestParams params = new RequestParams();
         params.put("MemID", PreferenceHelper.readString(MyApplication.context, "shoppay", "memid", "123"));
-        params.put("OrderAccount", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+        params.put("OrderAccount", orderNum);
 //        (订单折后总金额/标记B)取整
         params.put("OrderPoint", (int) CommonUtils.div(Double.parseDouble(tv_zhmoney.getText().toString()), Double.parseDouble(PreferenceHelper.readString(getActivity(), "shoppay", "DiscountPoint", "1")),2));
         params.put("TotalMoney", et_xfmoney.getText().toString());
@@ -581,6 +551,7 @@ public class VipFragment extends Fragment implements View.OnClickListener {
         LogUtils.d("xxparams", params.toString());
         String url = UrlTools.obtainUrl(getActivity(), "?Source=3", "QuickExpense");
         LogUtils.d("xxurl", url);
+        client.setTimeout(120*1000);
         client.post(url, params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -643,5 +614,82 @@ public class VipFragment extends Fragment implements View.OnClickListener {
 //        manager.cancel(pi);
 //        //注销广播
         getActivity().unregisterReceiver(msgReceiver);
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case 222:
+                if (resultCode == Activity.RESULT_OK) {
+                    pay(data.getStringExtra("codedata"));
+                }
+                break;
+        }
+    }
+
+    private void pay(String codedata) {
+        dialog.show();
+        AsyncHttpClient client = new AsyncHttpClient();
+        final PersistentCookieStore myCookieStore = new PersistentCookieStore(getActivity());
+        client.setCookieStore(myCookieStore);
+        RequestParams map = new RequestParams();
+        map.put("auth_code",codedata);
+        map.put("UserID", PreferenceHelper.readString(getActivity(), "shoppay", "UserID",""));
+//        （1会员充值7商品消费9快速消费11会员充次）
+        map.put("ordertype",9);
+        orderAccount=DateUtils.getCurrentTime("yyyyMMddHHmmss");
+        map.put("account",orderAccount );
+        map.put("money", tv_zhmoney.getText().toString());
+//        0=现金 1=银联 2=微信 3=支付宝
+        if (isMoney) {
+            map.put("payType", 0);
+        } else if (isWx) {
+            map.put("payType", 2);
+        } else if (isYinlian) {
+            map.put("payType", 1);
+        } else {
+            map.put("payType", 3);
+        }
+        client.setTimeout(120*1000);
+        LogUtils.d("xxparams", map.toString());
+        String url = UrlTools.obtainUrl(getActivity(), "?Source=3", "PayOnLine");
+        LogUtils.d("xxurl", url);
+        client.post(url, map, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                try {
+                    dialog.dismiss();
+                    LogUtils.d("xxpayS", new String(responseBody, "UTF-8"));
+                    JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
+                    if (jso.getInt("flag") == 1) {
+
+                        JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
+                        DayinUtils.dayin(jsonObject.getString("printContent"));
+                        if (jsonObject.getInt("printNumber") == 0) {
+                        } else {
+                            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                            if (bluetoothAdapter.isEnabled()) {
+                                BluetoothUtil.connectBlueTooth(MyApplication.context);
+                                BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
+                            } else {
+                            }
+                        }
+                        jiesuan(orderAccount);
+                    } else {
+                        Toast.makeText(getActivity(), jso.getString("msg"), Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(getActivity(), "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                dialog.dismiss();
+                Toast.makeText(getActivity(), "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

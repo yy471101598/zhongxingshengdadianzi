@@ -3,6 +3,7 @@ package com.shoppay.szvipnewzh;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -39,9 +40,13 @@ import com.shoppay.szvipnewzh.bean.VipPayMsg;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
 import com.shoppay.szvipnewzh.db.DBAdapter;
 import com.shoppay.szvipnewzh.http.InterfaceBack;
+import com.shoppay.szvipnewzh.tools.BluetoothUtil;
 import com.shoppay.szvipnewzh.tools.CommonUtils;
+import com.shoppay.szvipnewzh.tools.DateUtils;
+import com.shoppay.szvipnewzh.tools.DayinUtils;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
+import com.shoppay.szvipnewzh.tools.NoDoubleClickListener;
 import com.shoppay.szvipnewzh.tools.NumRechargeDialog;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.StringUtil;
@@ -51,9 +56,12 @@ import com.shoppay.szvipnewzh.wxcode.MipcaActivityCapture;
 import org.json.JSONObject;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
+
+import static com.shoppay.szvipnewzh.MyApplication.context;
 
 /**
  *
@@ -118,6 +126,8 @@ public class NumRechargeActivity extends Activity implements
     private MsgReceiver msgReceiver;
     private Dialog weixinDialog;
     private VipPayMsg vipPayMsg;
+    private String paytype;
+    private String orderAccount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -311,9 +321,48 @@ public class NumRechargeActivity extends Activity implements
         rl_right = (RelativeLayout) findViewById(R.id.rl_right);
         rl_right.setOnClickListener(this);
         rl_left.setOnClickListener(this);
-        rl_jiesuan.setOnClickListener(this);
-
         listView.setOnItemClickListener(this);
+        rl_jiesuan.setOnClickListener(new NoDoubleClickListener() {
+            @Override
+            protected void onNoDoubleClick(View view) {
+                if(tv_num.getText().toString().equals("0")){
+                    Toast.makeText(getApplicationContext(), "请选择商品",
+                            Toast.LENGTH_SHORT).show();
+                }else{
+                    if (CommonUtils.checkNet(getApplicationContext())) {
+                        if(et_card.getText().toString().equals("")||et_card.getText().toString()==null){
+                            Toast.makeText(ac,"请输入会员卡号",Toast.LENGTH_SHORT).show();
+                        }else{
+                            jiesuanDialog= NumRechargeDialog.jiesuanDialog(dialog,NumRechargeActivity.this, 1,"num", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                                @Override
+                                public void onResponse(Object response) {
+                                    if (response.toString().equals("wxpay")) {
+                                        paytype = "wx";
+                                        Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                                        startActivityForResult(mipca, 333);
+                                    } else if (response.toString().equals("zfbpay")) {
+                                        paytype = "zfb";
+                                        Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                                        startActivityForResult(mipca, 333);
+                                    } else {
+                                        finish();
+                                    }
+                                }
+
+                                @Override
+                                public void onErrorResponse(Object msg) {
+
+                                }
+                            });
+                        }
+                    }
+                    else {
+                        Toast.makeText(getApplicationContext(), "请检查网络是否可用",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
 
 
 
@@ -333,8 +382,163 @@ public class NumRechargeActivity extends Activity implements
                     et_card.setText(data.getStringExtra("codedata"));
                 }
                 break;
-
+            case 333:
+                if (resultCode == RESULT_OK) {
+                    pay(data.getStringExtra("codedata"));
+                }
+                break;
         }
+    }
+    private void pay(String codedata) {
+        dialog.show();
+        AsyncHttpClient client = new AsyncHttpClient();
+        final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
+        client.setCookieStore(myCookieStore);
+        RequestParams map = new RequestParams();
+        map.put("auth_code", codedata);
+        map.put("UserID", PreferenceHelper.readString(ac, "shoppay", "UserID", ""));
+//        （1会员充值7商品消费9快速消费11会员充次）
+        map.put("ordertype", 11);
+        orderAccount = DateUtils.getCurrentTime("yyyyMMddHHmmss");
+        map.put("account", orderAccount);
+        map.put("money", tv_money.getText().toString());
+//        0=现金 1=银联 2=微信 3=支付宝
+        switch (paytype) {
+            case "wx":
+                map.put("payType", 2);
+                break;
+            case "zfb":
+                map.put("payType", 3);
+                break;
+        }
+        client.setTimeout(120*1000);
+        LogUtils.d("xxparams", map.toString());
+        String url = UrlTools.obtainUrl(ac, "?Source=3", "PayOnLine");
+        LogUtils.d("xxurl", url);
+        client.post(url, map, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                try {
+                    dialog.dismiss();
+                    LogUtils.d("xxpayS", new String(responseBody, "UTF-8"));
+                    JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
+                    if (jso.getInt("flag") == 1) {
+
+                        JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
+                        DayinUtils.dayin(jsonObject.getString("printContent"));
+                        if (jsonObject.getInt("printNumber") == 0) {
+                        } else {
+                            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                            if (bluetoothAdapter.isEnabled()) {
+                                BluetoothUtil.connectBlueTooth(MyApplication.context);
+                                BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
+                            } else {
+                            }
+                        }
+                        jiesuan(orderAccount);
+                    } else {
+                        Toast.makeText(ac, jso.getString("msg"), Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                dialog.dismiss();
+                Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private  void jiesuan(String orderNum){
+        dialog.show();
+        AsyncHttpClient client = new AsyncHttpClient();
+        final PersistentCookieStore myCookieStore = new PersistentCookieStore(context);
+        client.setCookieStore(myCookieStore);
+        final DBAdapter dbAdapter = DBAdapter.getInstance(context);
+        List<ShopCar> list = dbAdapter.getListShopCar(PreferenceHelper.readString(context, "shoppay", "account", "123"));
+        List<ShopCar> shoplist = new ArrayList<>();
+        double yfmoney = 0.0;
+        double zfmoney = 0.0;
+        int num = 0;
+        for (ShopCar numShop : list) {
+            if (numShop.count == 0) {
+            } else {
+                shoplist.add(numShop);
+                zfmoney = CommonUtils.add(zfmoney, Double.parseDouble(numShop.discountmoney));
+                yfmoney = CommonUtils.add(yfmoney, Double.parseDouble(CommonUtils.multiply(numShop.count + "", numShop.price)));
+                num = num + numShop.count;
+            }
+        }
+        RequestParams params = new RequestParams();
+        params.put("MemID", PreferenceHelper.readString(context, "shoppay", "memid", ""));
+        params.put("OrderAccount", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+        params.put("TotalMoney", yfmoney);
+        params.put("DiscountMoney", zfmoney);
+        params.put("OrderPoint", "");
+        switch (paytype) {
+            case "wx":
+                params.put("payType", 2);
+                break;
+            case "zfb":
+                params.put("payType", 3);
+                break;
+        }
+        params.put("UserPwd", "");
+        params.put("GlistCount", shoplist.size());
+
+        for (int i = 0; i < shoplist.size(); i++) {
+            params.put("Glist[" + i + "][GoodsID]", shoplist.get(i).goodsid);
+            params.put("Glist[" + i + "][number]", shoplist.get(i).count);
+            params.put("Glist[" + i + "][GoodsPoint]", "");
+            params.put("Glist[" + i + "][Price]", shoplist.get(i).discountmoney);
+            params.put("Glist[" + i + "][GoodsPrice]", shoplist.get(i).price);
+        }
+        LogUtils.d("xxparams", params.toString());
+        String url = UrlTools.obtainUrl(context, "?Source=3", "RechargeCount");
+        LogUtils.d("xxurl", url);
+        client.post(url, params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                try {
+                    dialog.dismiss();
+                    LogUtils.d("xxjiesuanS", new String(responseBody, "UTF-8"));
+                    JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
+                    if (jso.getInt("flag") == 1) {
+                        dialog.dismiss();
+                        Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
+                        JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
+                        if (jsonObject.getInt("printNumber") == 0) {
+                            dbAdapter.deleteShopCar();
+                        } else {
+                            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                            if (bluetoothAdapter.isEnabled()) {
+                                BluetoothUtil.connectBlueTooth(MyApplication.context);
+                                BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
+                                dbAdapter.deleteShopCar();
+                            } else {
+                                dbAdapter.deleteShopCar();
+                            }
+                        }
+                        finish();
+                    }else{
+                        Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
+                    }
+                } catch (Exception e) {
+                    dialog.dismiss();
+                }
+//				printReceipt_BlueTooth(context,xfmoney,yfmoney,jf,et_zfmoney,et_yuemoney,tv_dkmoney,et_jfmoney);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                dialog.dismiss();
+                Toast.makeText(context, "结算失败，请重新结算",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -346,36 +550,6 @@ public class NumRechargeActivity extends Activity implements
                 break;
             case R.id.rl_left:
                 finish();
-                break;
-            case R.id.numrecharge_rl_jiesan:
-                LogUtils.d("xx","click");
-                if(tv_num.getText().toString().equals("0")){
-                    Toast.makeText(getApplicationContext(), "请选择商品",
-                            Toast.LENGTH_SHORT).show();
-                }else{
-                    if (CommonUtils.checkNet(getApplicationContext())) {
-                          if(et_card.getText().toString().equals("")||et_card.getText().toString()==null){
-                              Toast.makeText(ac,"请输入会员卡号",Toast.LENGTH_SHORT).show();
-                          }else{
-                              LogUtils.d("xx","ssssss");
-                       jiesuanDialog= NumRechargeDialog.jiesuanDialog(dialog,NumRechargeActivity.this, 1,"num", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
-                           @Override
-                           public void onResponse(Object response) {
-                               finish();
-                           }
-
-                           @Override
-                           public void onErrorResponse(Object msg) {
-
-                           }
-                       });
-                    }
-                    }
-                        else {
-                        Toast.makeText(getApplicationContext(), "请检查网络是否可用",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
                 break;
         }
     }

@@ -22,6 +22,7 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
 import com.shoppay.szvipnewzh.R;
 import com.shoppay.szvipnewzh.tools.ActivityStack;
+import com.shoppay.szvipnewzh.tools.LogUtils;
 import com.shoppay.szvipnewzh.zxing.camera.CameraManager;
 import com.shoppay.szvipnewzh.zxing.decoding.CaptureActivityHandler;
 import com.shoppay.szvipnewzh.zxing.decoding.InactivityTimer;
@@ -135,6 +136,7 @@ public class MipcaActivityCapture extends Activity implements Callback {
         inactivityTimer.onActivity();
         playBeepSoundAndVibrate();
         String resultString = result.getText();
+        LogUtils.d("xxcode",resultString);
         if (resultString.equals("")) {
             Toast.makeText(MipcaActivityCapture.this, "Scan failed!", Toast.LENGTH_SHORT).show();
         } else {

@@ -100,6 +100,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
     };
     private RadioGroup mRadiogroup;
     private RelativeLayout rl_right;
+    private String orderAccount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -280,7 +281,25 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                 } else {
                     if (isSuccess) {
                         if (CommonUtils.checkNet(getApplicationContext())) {
-                            vipRecharge();
+                            if(isWx){
+                                if(LoginActivity.sysquanxian.iswxpay==1){
+                                    Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                                    mipca.putExtra("type","pay");
+                                    startActivityForResult(mipca, 222);
+                                }else {
+                                    vipRecharge(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                }
+                            }else if(isZhifubao){
+                                if(LoginActivity.sysquanxian.iszfbpay==1){
+                                    Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                                    mipca.putExtra("type","pay");
+                                    startActivityForResult(mipca, 222);
+                                }else {
+                                    vipRecharge(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                }
+                            }else {
+                                vipRecharge(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                            }
                         } else {
                             Toast.makeText(getApplicationContext(), "请检查网络是否可用",
                                     Toast.LENGTH_SHORT).show();
@@ -302,8 +321,76 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                     et_vipcard.setText(data.getStringExtra("codedata"));
                 }
                 break;
-
+            case 222:
+                if (resultCode == RESULT_OK) {
+                    pay(data.getStringExtra("codedata"));
+                }
+                break;
         }
+    }
+
+    private void pay(String codedata) {
+        dialog.show();
+        AsyncHttpClient client = new AsyncHttpClient();
+        final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
+        client.setCookieStore(myCookieStore);
+        RequestParams map = new RequestParams();
+        map.put("auth_code",codedata);
+        map.put("UserID", PreferenceHelper.readString(ac, "shoppay", "UserID",""));
+//        （1会员充值7商品消费9快速消费11会员充次）
+        map.put("ordertype",1);
+        orderAccount=DateUtils.getCurrentTime("yyyyMMddHHmmss");
+        map.put("account",orderAccount );
+        map.put("money", et_money.getText().toString());
+//        0=现金 1=银联 2=微信 3=支付宝
+        if (isMoney) {
+            map.put("payType", 0);
+        } else if (isWx) {
+            map.put("payType", 2);
+        } else if (isYinlian) {
+            map.put("payType", 1);
+        } else {
+            map.put("payType", 3);
+        }
+        client.setTimeout(120*1000);
+        LogUtils.d("xxparams", map.toString());
+        String url = UrlTools.obtainUrl(ac, "?Source=3", "PayOnLine");
+        LogUtils.d("xxurl", url);
+        client.post(url, map, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                try {
+                    dialog.dismiss();
+                    LogUtils.d("xxpayS", new String(responseBody, "UTF-8"));
+                    JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
+                    if (jso.getInt("flag") == 1) {
+
+                        JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
+                        DayinUtils.dayin(jsonObject.getString("printContent"));
+                        if (jsonObject.getInt("printNumber") == 0) {
+                        } else {
+                            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                            if (bluetoothAdapter.isEnabled()) {
+                                BluetoothUtil.connectBlueTooth(MyApplication.context);
+                                BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
+                            } else {
+                            }
+                        }
+                        vipRecharge(orderAccount);
+                    } else {
+                        Toast.makeText(ac, jso.getString("msg"), Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                dialog.dismiss();
+                Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -320,14 +407,14 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
     }
 
 
-    private void vipRecharge() {
+    private void vipRecharge(String ordernum) {
         dialog.show();
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
         RequestParams map = new RequestParams();
         map.put("MemID", PreferenceHelper.readString(ac, "shoppay", "memid", ""));
-        map.put("rechargeAccount", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+        map.put("rechargeAccount", ordernum);
         map.put("money", et_money.getText().toString());
 //        0=现金 1=银联 2=微信 3=支付宝
         if (isMoney) {
