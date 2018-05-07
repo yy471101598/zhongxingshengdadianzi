@@ -195,14 +195,14 @@ public class ShopXiaofeiDialog {
                         } else {
 
                             if(isWx){
-                                if(LoginActivity.sysquanxian.iswxpay==1){
+                                if(LoginActivity.sysquanxian.iswxpay==0){
                                    handler.onResponse("wxpay");
                                     dialog.dismiss();
                                 }else {
                                     jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
                             }else if(isZhifubao){
-                                if(LoginActivity.sysquanxian.iszfbpay==1){
+                                if(LoginActivity.sysquanxian.iszfbpay==0){
                                     handler.onResponse("zfbpay");
                                     dialog.dismiss();
                                 }else {

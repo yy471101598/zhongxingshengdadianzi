@@ -63,6 +63,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
     private String state = "现金";
     private String editString;
     private Dialog dialog;
+    private Dialog paydialog;
     private RechargeAdapter adapter;
     private VipRecharge recharge;
     private boolean isSuccess = false;
@@ -108,6 +109,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
         setContentView(R.layout.activity_viprecharge);
         ac = MyApplication.context;
         dialog = DialogUtil.loadingDialog(VipRechargeActivity.this, 1);
+        paydialog = DialogUtil.payloadingDialog(VipRechargeActivity.this, 1);
         PreferenceHelper.write(MyApplication.context, "shoppay", "viptoast", "未查询到会员");
         ActivityStack.create().addActivity(VipRechargeActivity.this);
         initView();
@@ -282,7 +284,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                     if (isSuccess) {
                         if (CommonUtils.checkNet(getApplicationContext())) {
                             if(isWx){
-                                if(LoginActivity.sysquanxian.iswxpay==1){
+                                if(LoginActivity.sysquanxian.iswxpay==0){
                                     Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                     mipca.putExtra("type","pay");
                                     startActivityForResult(mipca, 222);
@@ -290,7 +292,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                                     vipRecharge(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
                             }else if(isZhifubao){
-                                if(LoginActivity.sysquanxian.iszfbpay==1){
+                                if(LoginActivity.sysquanxian.iszfbpay==0){
                                     Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                     mipca.putExtra("type","pay");
                                     startActivityForResult(mipca, 222);
@@ -330,7 +332,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
     }
 
     private void pay(String codedata) {
-        dialog.show();
+        paydialog.show();
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
@@ -360,7 +362,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 try {
-                    dialog.dismiss();
+                    paydialog.dismiss();
                     LogUtils.d("xxpayS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                     if (jso.getInt("flag") == 1) {
@@ -381,13 +383,14 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                         Toast.makeText(ac, jso.getString("msg"), Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
+                    paydialog.dismiss();
                     Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                dialog.dismiss();
+                paydialog.dismiss();
                 Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
             }
         });

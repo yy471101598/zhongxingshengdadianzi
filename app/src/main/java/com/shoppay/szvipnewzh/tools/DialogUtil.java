@@ -668,6 +668,49 @@ public class DialogUtil {
 				break;
 		}
 	}
+
+	public static Dialog payloadingDialog(final Context context,
+									   int showingLocation) {
+		final Dialog dialog;
+		LayoutInflater inflater = LayoutInflater.from(context);
+		View view = inflater.inflate(R.layout.dialog_payloading, null);
+		dialog = new Dialog(context, R.style.DialogNotitle1);
+		dialog.setCancelable(false);
+		dialog.setCanceledOnTouchOutside(false);
+		int screenWidth = ((WindowManager) context
+				.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay()
+				.getWidth();
+		dialog.setContentView(view, new LinearLayout.LayoutParams(
+				screenWidth-100, LinearLayout.LayoutParams.WRAP_CONTENT));
+		Window window = dialog.getWindow();
+		switch (showingLocation) {
+			case 0:
+				window.setGravity(Gravity.TOP); // 此处可以设置dialog显示的位置
+				break;
+			case 1:
+				window.setGravity(Gravity.CENTER);
+				break;
+			case 2:
+				window.setGravity(Gravity.BOTTOM);
+				break;
+			case 3:
+				WindowManager.LayoutParams params = window.getAttributes();
+				dialog.onWindowAttributesChanged(params);
+				params.x = screenWidth-dip2px(context,100);// 设置x坐标
+				params.gravity = Gravity.TOP;
+				params.y = dip2px(context, 45);// 设置y坐标
+				Log.d("xx", params.y + "");
+				window.setGravity(Gravity.TOP);
+				window.setAttributes(params);
+				break;
+			default:
+				window.setGravity(Gravity.CENTER);
+				break;
+		}
+		return dialog;
+	}
+
+
 	public static Dialog loadingDialog(final Context context,
 										 int showingLocation) {
 		final Dialog dialog;

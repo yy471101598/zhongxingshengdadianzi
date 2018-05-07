@@ -67,6 +67,7 @@ public class VipFragment extends Fragment  {
     private RelativeLayout rl_pay_money, rl_pay_yue, rl_pay_jifen, rl_pay_jifenmaxdk, rl_pay_jifendkm, rl_wx;
     private String editString;
     private Dialog dialog;
+    private Dialog paydialog;
     private String xfmoney;
     private RelativeLayout rl_password;
     private RadioButton rb_money, rb_wx, rb_zhifubao, rb_isYinlian, rb_yue, rb_qita;
@@ -131,6 +132,7 @@ public class VipFragment extends Fragment  {
         View view = inflater.inflate(R.layout.fragment_vipconsumption, null);
         initView(view);
         dialog = DialogUtil.loadingDialog(getActivity(), 1);
+        paydialog = DialogUtil.payloadingDialog(getActivity(), 1);
         PreferenceHelper.write(MyApplication.context, "shoppay", "memid", "123");
         PreferenceHelper.write(MyApplication.context, "shoppay", "vipdengjiid", "123");
         PreferenceHelper.write(MyApplication.context, "shoppay", "jifenpercent", "123");
@@ -488,7 +490,7 @@ public class VipFragment extends Fragment  {
                                     });
                             } else {
                                 if(isWx){
-                                    if(LoginActivity.sysquanxian.iswxpay==1){
+                                    if(LoginActivity.sysquanxian.iswxpay==0){
                                         Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
                                         mipca.putExtra("type","pay");
                                         startActivityForResult(mipca, 222);
@@ -496,7 +498,7 @@ public class VipFragment extends Fragment  {
                                         jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                     }
                                 }else if(isZhifubao){
-                                    if(LoginActivity.sysquanxian.iszfbpay==1){
+                                    if(LoginActivity.sysquanxian.iszfbpay==0){
                                         Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
                                         mipca.putExtra("type","pay");
                                         startActivityForResult(mipca, 222);
@@ -630,7 +632,7 @@ public class VipFragment extends Fragment  {
     }
 
     private void pay(String codedata) {
-        dialog.show();
+        paydialog.show();
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(getActivity());
         client.setCookieStore(myCookieStore);
@@ -660,7 +662,7 @@ public class VipFragment extends Fragment  {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 try {
-                    dialog.dismiss();
+                    paydialog.dismiss();
                     LogUtils.d("xxpayS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                     if (jso.getInt("flag") == 1) {
@@ -681,13 +683,14 @@ public class VipFragment extends Fragment  {
                         Toast.makeText(getActivity(), jso.getString("msg"), Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
+                    paydialog.dismiss();
                     Toast.makeText(getActivity(), "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                dialog.dismiss();
+                paydialog.dismiss();
                 Toast.makeText(getActivity(), "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
             }
         });

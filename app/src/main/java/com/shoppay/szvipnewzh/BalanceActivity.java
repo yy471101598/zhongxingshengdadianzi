@@ -91,6 +91,7 @@ public class BalanceActivity extends FragmentActivity implements
     private EditText et_card;
     private String type = "否";
     private Dialog dialog;
+    private Dialog paydialog;
     private Context ac;
     private ShopChangeReceiver shopchangeReceiver;
     private DBAdapter dbAdapter;
@@ -150,6 +151,7 @@ public class BalanceActivity extends FragmentActivity implements
         setContentView(R.layout.activity_balance);
         ac = context;
         dialog = DialogUtil.loadingDialog(BalanceActivity.this, 1);
+        paydialog = DialogUtil.payloadingDialog(BalanceActivity.this, 1);
         dbAdapter = DBAdapter.getInstance(ac);
         PreferenceHelper.write(ac, "shoppay", "memid", "");
         PreferenceHelper.write(ac, "shoppay", "isSan", true);
@@ -586,7 +588,7 @@ public class BalanceActivity extends FragmentActivity implements
     }
 
     private void pay(String codedata) {
-        dialog.show();
+        paydialog.show();
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
@@ -615,7 +617,7 @@ public class BalanceActivity extends FragmentActivity implements
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 try {
-                    dialog.dismiss();
+                    paydialog.dismiss();
                     LogUtils.d("xxpayS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                     if (jso.getInt("flag") == 1) {
@@ -636,13 +638,14 @@ public class BalanceActivity extends FragmentActivity implements
                         Toast.makeText(ac, jso.getString("msg"), Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
+                    paydialog.dismiss();
                     Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                dialog.dismiss();
+                paydialog.dismiss();
                 Toast.makeText(ac, "支付失败，请稍后再试", Toast.LENGTH_SHORT).show();
             }
         });
