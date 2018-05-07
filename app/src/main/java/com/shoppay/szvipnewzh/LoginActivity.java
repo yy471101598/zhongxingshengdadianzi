@@ -102,7 +102,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         params.put("error", s);
 
         Log.d("xx", s);
-        client.post(PreferenceHelper.readString(ac, "shoppay", "yuming", "123") + "/mobile/app/api/appAPI.ashx?Method=LogError", params, new AsyncHttpResponseHandler() {
+        client.post(PreferenceHelper.readString(ac, "shoppay", "yuming", "123") + "?Source=3&Method=logError", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 Log.d("xxLogS", "sd");
