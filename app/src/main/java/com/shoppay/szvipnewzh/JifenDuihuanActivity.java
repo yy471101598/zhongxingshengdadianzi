@@ -520,7 +520,11 @@ public class JifenDuihuanActivity extends Activity {
                 }else{
                     if(isSuccess){
                         if(isClick) {
-                            jifenJiesuan();
+                            if(Double.parseDouble(vipTvJifen.getText().toString())<point) {
+                                Toast.makeText(ac, "积分不足", Toast.LENGTH_SHORT).show();
+                            }else {
+                                jifenJiesuan();
+                            }
                         }
                     }else{
                         Toast.makeText(ac,"请获取会员信息",Toast.LENGTH_SHORT).show();
