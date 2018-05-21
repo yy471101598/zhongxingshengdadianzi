@@ -129,12 +129,14 @@ public class NumRechargeActivity extends Activity implements
     private VipPayMsg vipPayMsg;
     private String paytype;
     private String orderAccount;
+    private MyApplication app;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_numrecharge);
         ac=MyApplication.context;
+        app= (MyApplication) getApplication();
        dialog= DialogUtil.loadingDialog(NumRechargeActivity.this,1);
         paydialog= DialogUtil.payloadingDialog(NumRechargeActivity.this,1);
         dbAdapter=DBAdapter.getInstance(ac);
@@ -335,7 +337,7 @@ public class NumRechargeActivity extends Activity implements
                         if(et_card.getText().toString().equals("")||et_card.getText().toString()==null){
                             Toast.makeText(ac,"请输入会员卡号",Toast.LENGTH_SHORT).show();
                         }else{
-                            jiesuanDialog= NumRechargeDialog.jiesuanDialog(dialog,NumRechargeActivity.this, 1,"num", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                            jiesuanDialog= NumRechargeDialog.jiesuanDialog(app,dialog,NumRechargeActivity.this, 1,"num", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
                                     if (response.toString().equals("wxpay")) {

@@ -32,6 +32,7 @@ import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
 import com.shoppay.szvipnewzh.bean.FastShopZhehMoney;
 import com.shoppay.szvipnewzh.bean.JifenDk;
+import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.bean.VipInfo;
 import com.shoppay.szvipnewzh.bean.VipInfoMsg;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
@@ -123,6 +124,8 @@ public class VipFragment extends Fragment  {
     private String password = "";
     private MsgReceiver msgReceiver;
     private String orderAccount;
+    private SystemQuanxian sysquanxian;
+    private MyApplication app;
     //    private Intent intent;
 //    private Dialog weixinDialog;
 
@@ -130,6 +133,8 @@ public class VipFragment extends Fragment  {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_vipconsumption, null);
+        app= (MyApplication) getActivity().getApplication();
+        sysquanxian=app.getSysquanxian();
         initView(view);
         dialog = DialogUtil.loadingDialog(getActivity(), 1);
         paydialog = DialogUtil.payloadingDialog(getActivity(), 1);
@@ -195,7 +200,7 @@ public class VipFragment extends Fragment  {
                         isWx = false;
                         isYinlian = false;
                         isZhifubao = false;
-//                        if(LoginActivity.sysquanxian.ispassword==1){
+//                        if(sysquanxian.ispassword==1){
 //                            rl_password.setVisibility(View.VISIBLE);
 //                        }
                         break;
@@ -424,22 +429,22 @@ public class VipFragment extends Fragment  {
         rb_wx = (RadioButton) view.findViewById(R.id.rb_wx);
         rb_yue = (RadioButton) view.findViewById(R.id.rb_yue);
         rb_qita = (RadioButton) view.findViewById(R.id.rb_qita);
-        if (LoginActivity.sysquanxian.isweixin == 0) {
+        if (sysquanxian.isweixin == 0) {
             rb_wx.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.iszhifubao == 0) {
+        if (sysquanxian.iszhifubao == 0) {
             rb_zhifubao.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isyinlian == 0) {
+        if (sysquanxian.isyinlian == 0) {
             rb_isYinlian.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isxianjin == 0) {
+        if (sysquanxian.isxianjin == 0) {
             rb_money.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isqita == 0) {
+        if (sysquanxian.isqita == 0) {
             rb_qita.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isyue == 0) {
+        if (sysquanxian.isyue == 0) {
             rb_yue.setVisibility(View.GONE);
         }
 
@@ -475,7 +480,7 @@ public class VipFragment extends Fragment  {
                                     Toast.LENGTH_SHORT).show();
                         }else {
 
-                            if (isYue && LoginActivity.sysquanxian.ispassword == 1) {
+                            if (isYue && sysquanxian.ispassword == 1) {
                                     DialogUtil.pwdDialog(getActivity(), 1, new InterfaceBack() {
                                         @Override
                                         public void onResponse(Object response) {
@@ -490,7 +495,7 @@ public class VipFragment extends Fragment  {
                                     });
                             } else {
                                 if(isWx){
-                                    if(LoginActivity.sysquanxian.iswxpay==0){
+                                    if(sysquanxian.iswxpay==0){
                                         Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
                                         mipca.putExtra("type","pay");
                                         startActivityForResult(mipca, 222);
@@ -498,7 +503,7 @@ public class VipFragment extends Fragment  {
                                         jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                     }
                                 }else if(isZhifubao){
-                                    if(LoginActivity.sysquanxian.iszfbpay==0){
+                                    if(sysquanxian.iszfbpay==0){
                                         Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
                                         mipca.putExtra("type","pay");
                                         startActivityForResult(mipca, 222);

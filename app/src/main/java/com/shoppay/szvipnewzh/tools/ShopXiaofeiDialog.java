@@ -26,6 +26,7 @@ import com.shoppay.szvipnewzh.LoginActivity;
 import com.shoppay.szvipnewzh.MyApplication;
 import com.shoppay.szvipnewzh.R;
 import com.shoppay.szvipnewzh.bean.ShopCar;
+import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.db.DBAdapter;
 import com.shoppay.szvipnewzh.http.InterfaceBack;
 import com.shoppay.szvipnewzh.wxcode.MipcaActivityCapture;
@@ -45,7 +46,7 @@ public class ShopXiaofeiDialog {
     public static boolean isMoney = true, isYue = false, isZhifubao = false, isYinlian = false, isQita = false, isWx = false;
     public static Dialog dialog;
 
-    public static Dialog jiesuanDialog(final  boolean isVip,final Dialog loading,final Context context,
+    public static Dialog jiesuanDialog(MyApplication app,final  boolean isVip,final Dialog loading,final Context context,
                                        int showingLocation, final String type,final double yfmoney, final InterfaceBack handler) {
         final Dialog dialog;
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -57,29 +58,29 @@ public class ShopXiaofeiDialog {
         final RelativeLayout rl_jiesuan = (RelativeLayout) view.findViewById(R.id.shoppay_rl_jiesuan);
         final RelativeLayout rl_password = (RelativeLayout) view.findViewById(R.id.vip_rl_password);
         final RadioGroup mRadiogroup = (RadioGroup) view.findViewById(R.id.radiogroup);
-
+        final SystemQuanxian sysquanxian=app.getSysquanxian();
        RadioButton rb_isYinlian= (RadioButton) view.findViewById(R.id.rb_yinlian);
         RadioButton rb_money= (RadioButton) view.findViewById(R.id.rb_money);
         RadioButton rb_zhifubao= (RadioButton)view. findViewById(R.id.rb_zhifubao);
         RadioButton rb_wx= (RadioButton)view. findViewById(R.id.rb_wx);
         RadioButton rb_yue= (RadioButton)view. findViewById(R.id.rb_yue);
         RadioButton rb_qita= (RadioButton)view. findViewById(R.id.rb_qita);
-        if(LoginActivity.sysquanxian.isweixin==0){
+        if(sysquanxian.isweixin==0){
             rb_wx.setVisibility(View.GONE);
         }
-        if(LoginActivity.sysquanxian.iszhifubao==0){
+        if(sysquanxian.iszhifubao==0){
             rb_zhifubao.setVisibility(View.GONE);
         }
-        if(LoginActivity.sysquanxian.isyinlian==0){
+        if(sysquanxian.isyinlian==0){
             rb_isYinlian.setVisibility(View.GONE);
         }
-        if(LoginActivity.sysquanxian.isxianjin==0){
+        if(sysquanxian.isxianjin==0){
             rb_money.setVisibility(View.GONE);
         }
-        if(LoginActivity.sysquanxian.isqita==0){
+        if(sysquanxian.isqita==0){
             rb_qita.setVisibility(View.GONE);
         }
-        if(LoginActivity.sysquanxian.isyue==0){
+        if(sysquanxian.isyue==0){
             rb_yue.setVisibility(View.GONE);
         }
         if(isVip){
@@ -180,7 +181,7 @@ public class ShopXiaofeiDialog {
                         Toast.makeText(MyApplication.context, "余额不足",
                                 Toast.LENGTH_SHORT).show();
                     }else {
-                        if (isYue&&LoginActivity.sysquanxian.ispassword==1) {
+                        if (isYue&&sysquanxian.ispassword==1) {
                             DialogUtil.pwdDialog( context, 1, new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
@@ -195,14 +196,14 @@ public class ShopXiaofeiDialog {
                         } else {
 
                             if(isWx){
-                                if(LoginActivity.sysquanxian.iswxpay==0){
+                                if(sysquanxian.iswxpay==0){
                                    handler.onResponse("wxpay");
                                     dialog.dismiss();
                                 }else {
                                     jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
                             }else if(isZhifubao){
-                                if(LoginActivity.sysquanxian.iszfbpay==0){
+                                if(sysquanxian.iszfbpay==0){
                                     handler.onResponse("zfbpay");
                                     dialog.dismiss();
                                 }else {

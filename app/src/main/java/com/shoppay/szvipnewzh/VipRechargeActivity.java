@@ -26,6 +26,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
 import com.shoppay.szvipnewzh.adapter.RechargeAdapter;
+import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.bean.VipInfo;
 import com.shoppay.szvipnewzh.bean.VipInfoMsg;
 import com.shoppay.szvipnewzh.bean.VipRecharge;
@@ -102,12 +103,15 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
     private RadioGroup mRadiogroup;
     private RelativeLayout rl_right;
     private String orderAccount;
-
+    private SystemQuanxian sysquanxian;
+    private MyApplication app;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_viprecharge);
         ac = MyApplication.context;
+        app= (MyApplication) getApplication();
+        sysquanxian=app.getSysquanxian();
         dialog = DialogUtil.loadingDialog(VipRechargeActivity.this, 1);
         paydialog = DialogUtil.payloadingDialog(VipRechargeActivity.this, 1);
         PreferenceHelper.write(MyApplication.context, "shoppay", "viptoast", "未查询到会员");
@@ -255,16 +259,16 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
         rb_money = (RadioButton) findViewById(R.id.rb_money);
         rb_zhifubao = (RadioButton) findViewById(R.id.rb_zhifubao);
         rb_wx = (RadioButton) findViewById(R.id.rb_wx);
-        if (LoginActivity.sysquanxian.isweixin == 0) {
+        if (sysquanxian.isweixin == 0) {
             rb_wx.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.iszhifubao == 0) {
+        if (sysquanxian.iszhifubao == 0) {
             rb_zhifubao.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isyinlian == 0) {
+        if (sysquanxian.isyinlian == 0) {
             rb_isYinlian.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isxianjin == 0) {
+        if (sysquanxian.isxianjin == 0) {
             rb_money.setVisibility(View.GONE);
         }
 
@@ -284,7 +288,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                     if (isSuccess) {
                         if (CommonUtils.checkNet(getApplicationContext())) {
                             if(isWx){
-                                if(LoginActivity.sysquanxian.iswxpay==0){
+                                if(sysquanxian.iswxpay==0){
                                     Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                     mipca.putExtra("type","pay");
                                     startActivityForResult(mipca, 222);
@@ -292,7 +296,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                                     vipRecharge(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
                             }else if(isZhifubao){
-                                if(LoginActivity.sysquanxian.iszfbpay==0){
+                                if(sysquanxian.iszfbpay==0){
                                     Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                     mipca.putExtra("type","pay");
                                     startActivityForResult(mipca, 222);

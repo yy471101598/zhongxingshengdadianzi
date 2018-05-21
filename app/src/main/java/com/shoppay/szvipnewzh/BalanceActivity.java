@@ -144,12 +144,14 @@ public class BalanceActivity extends FragmentActivity implements
     private TextView tv_dingwei;
     private String orderAccount;
     private String paytype;
+    private MyApplication app;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_balance);
         ac = context;
+        app= (MyApplication) getApplication();
         dialog = DialogUtil.loadingDialog(BalanceActivity.this, 1);
         paydialog = DialogUtil.payloadingDialog(BalanceActivity.this, 1);
         dbAdapter = DBAdapter.getInstance(ac);
@@ -451,7 +453,7 @@ public class BalanceActivity extends FragmentActivity implements
                                 Toast.makeText(ac, "您选择的是会员结算，请确认会员信息是否正确", Toast.LENGTH_SHORT).show();
                             } else {//会员结算
 //
-                                ShopXiaofeiDialog.jiesuanDialog(true, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                                ShopXiaofeiDialog.jiesuanDialog(app,true, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                     @Override
                                     public void onResponse(Object response) {
                                         if (response.toString().equals("wxpay")) {
@@ -474,7 +476,7 @@ public class BalanceActivity extends FragmentActivity implements
                                 });
                             }
                         } else {//散客结算
-                            ShopXiaofeiDialog.jiesuanDialog(false, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                            ShopXiaofeiDialog.jiesuanDialog(app,false, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
                                     if (response.toString().equals("wxpay")) {

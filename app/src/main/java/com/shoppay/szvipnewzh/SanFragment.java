@@ -23,6 +23,7 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
+import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.http.InterfaceBack;
 import com.shoppay.szvipnewzh.tools.ActivityStack;
 import com.shoppay.szvipnewzh.tools.BluetoothUtil;
@@ -56,6 +57,8 @@ public class SanFragment extends Fragment {
     private boolean isMoney = true, isZhifubao = false, isYinlian = false, isQita = false, isWx = false;
     private RadioGroup mRadiogroup;
     private String orderAccount;
+    private SystemQuanxian sysquanxian;
+    private MyApplication app;
 //    private MsgReceiver msgReceiver;
 //    private Intent intent;
 //    private Dialog weixinDialog;
@@ -64,6 +67,8 @@ public class SanFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sanconsumption, null);
+        app= (MyApplication) getActivity().getApplication();
+        sysquanxian=app.getSysquanxian();
         initView(view);
         dialog = DialogUtil.loadingDialog(getActivity(), 1);
         paydialog = DialogUtil.payloadingDialog(getActivity(), 1);
@@ -133,22 +138,22 @@ public class SanFragment extends Fragment {
         rb_wx = (RadioButton) view.findViewById(R.id.rb_wx);
 //        rb_yue= (RadioButton)view. findViewById(R.id.rb_yue);
         rb_qita = (RadioButton) view.findViewById(R.id.rb_qita);
-        if (LoginActivity.sysquanxian.isweixin == 0) {
+        if (sysquanxian.isweixin == 0) {
             rb_wx.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.iszhifubao == 0) {
+        if (sysquanxian.iszhifubao == 0) {
             rb_zhifubao.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isyinlian == 0) {
+        if (sysquanxian.isyinlian == 0) {
             rb_isYinlian.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isxianjin == 0) {
+        if (sysquanxian.isxianjin == 0) {
             rb_money.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isqita == 0) {
+        if (sysquanxian.isqita == 0) {
             rb_qita.setVisibility(View.GONE);
         }
-        if (LoginActivity.sysquanxian.isyue == 0) {
+        if (sysquanxian.isyue == 0) {
             rb_yue.setVisibility(View.GONE);
         }
 
@@ -162,7 +167,7 @@ public class SanFragment extends Fragment {
                 } else {
                     if (CommonUtils.checkNet(getActivity())) {
                         if (isWx) {
-                            if (LoginActivity.sysquanxian.iswxpay == 0) {
+                            if (sysquanxian.iswxpay == 0) {
                                 Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
                                 mipca.putExtra("type", "pay");
                                 startActivityForResult(mipca, 222);
@@ -170,7 +175,7 @@ public class SanFragment extends Fragment {
                                 jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                             }
                         } else if (isZhifubao) {
-                            if (LoginActivity.sysquanxian.iszfbpay == 0) {
+                            if (sysquanxian.iszfbpay == 0) {
                                 Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
                                 mipca.putExtra("type", "pay");
                                 startActivityForResult(mipca, 222);

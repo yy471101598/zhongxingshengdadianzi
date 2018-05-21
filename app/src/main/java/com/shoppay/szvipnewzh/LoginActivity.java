@@ -57,7 +57,6 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private ImageView img;
     File file;
     private QuanxianManage menuquanxian;
-    public static SystemQuanxian sysquanxian;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -277,7 +276,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                     LogUtils.d("xxLoginS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                     if (jso.getInt("flag") == 1) {
-
+                        MyApplication myApplication = (MyApplication) getApplication();
                         PreferenceHelper.write(ac, "shoppay", "account", et_account.getText().toString());
                         PreferenceHelper.write(ac, "shoppay", "pwd", et_pwd.getText().toString());
                         PreferenceHelper.write(ac, "shoppay", "bianhao", et_yuming.getText().toString());
@@ -287,7 +286,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                         JSONArray dataau = jso.getJSONObject("vdata").getJSONArray("DataAuthority");
 //                        "DataAuthority":[{"1.1":1,"1.2":1,"1.3":1,"1.4":1,"1.5":1,"1.6":1,"1.7":0}]}
                         menuquanxian = new QuanxianManage();
-                        sysquanxian = new SystemQuanxian();
+                        SystemQuanxian sysquanxian = new SystemQuanxian();
                         for (int i = 0; i < memuau.length(); i++) {
                             JSONObject j = memuau.getJSONObject(i);
                             for (Iterator<String> iterator = j.keys(); iterator.hasNext(); ) {
@@ -357,7 +356,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                                     break;
                             }
                         }
-
+                        myApplication.setSystemQuanxian(sysquanxian);
                         Intent intent = new Intent(ac, HomeActivity.class);
                         intent.putExtra("quanxian", menuquanxian);
                         startActivity(intent);

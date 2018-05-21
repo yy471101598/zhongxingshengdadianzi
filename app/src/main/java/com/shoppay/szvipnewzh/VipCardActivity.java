@@ -24,6 +24,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
 import com.shoppay.szvipnewzh.bean.Dengji;
+import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.bean.VipInfo;
 import com.shoppay.szvipnewzh.bean.VipInfoMsg;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
@@ -83,12 +84,15 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
             }
         }
     };
-
+    private MyApplication app;
+    private SystemQuanxian sysquanxian;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vipcard);
         ac = this;
+        app= (MyApplication) getApplication();
+        sysquanxian=app.getSysquanxian();
         dialog = DialogUtil.loadingDialog(VipCardActivity.this, 1);
         ActivityStack.create().addActivity(ac);
         initView();
@@ -199,7 +203,7 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
         tv_tjname = (TextView) findViewById(R.id.vipcard_tv_tjname);
         tv_endtime = (TextView) findViewById(R.id.vipcard_tv_endtime);
         tv_title.setText("会员办卡");
-        if (LoginActivity.sysquanxian.ispassword == 1) {
+        if (sysquanxian.ispassword == 1) {
             tv_passstate.setVisibility(View.VISIBLE);
             ispassword = true;
         }
