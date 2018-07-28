@@ -59,7 +59,7 @@ public class NumAdapter extends BaseAdapter {
 	public View getView(final int position, View convertView, ViewGroup parent) {
 		// TODO Auto-generated method stub
 		final ViewHolder	vh;
-		if (convertView == null) {
+//		if (convertView == null) {
 			convertView = inflater.inflate(R.layout.item_num, null);
 			vh = new ViewHolder();
 			vh.tv_name = (TextView) convertView
@@ -71,12 +71,22 @@ public class NumAdapter extends BaseAdapter {
 			vh.img_add = (ImageView) convertView.findViewById(R.id.item_iv_add);
 			vh.img_del = (ImageView) convertView.findViewById(R.id.item_iv_del);
 			convertView.setTag(vh);
-		}else {
-			vh = (ViewHolder) convertView.getTag();
-		}
+//		}else {
+//			vh = (ViewHolder) convertView.getTag();
+//		}
 		final VipServece home = list.get(position);
 		vh.tv_name.setText(home.GoodsName);
 		vh.tv_synum.setText(home.CountNum);
+		NumShop dbshop = dbAdapter.getNumShop(home.GoodsID);
+		if (dbshop == null) {
+
+		} else {
+			if (dbshop.count != 0) {
+				vh.tv_num.setVisibility(View.VISIBLE);
+				vh.img_del.setVisibility(View.VISIBLE);
+				vh.tv_num.setText(dbshop.count + "");
+			}
+		}
 		vh.img_add.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
