@@ -84,6 +84,7 @@
             android:layout_alignParentRight="true"
             android:layout_marginRight="10dp"
             android:textColor="@color/text_30"
+            android:textColorHint="@color/text_66"
             android:layout_toRightOf="@id/num_tv_card"
             android:textSize="15sp"
             android:background="@null"

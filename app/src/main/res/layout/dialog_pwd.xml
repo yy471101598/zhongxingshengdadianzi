@@ -22,31 +22,32 @@
             android:background="@color/viewcolor"></View>
     </RelativeLayout>
 
-     <RelativeLayout
-         android:layout_width="match_parent"
-         android:layout_height="40dp"
-         android:background="@drawable/kuang_gray_white"
-         android:layout_marginLeft="10dp"
-         android:layout_marginRight="10dp"
-         android:layout_marginTop="15dp"
-         >
-         <EditText
-             android:id="@+id/pwd_et_pwd"
-             android:layout_width="match_parent"
-             android:layout_height="30dp"
-             android:layout_centerVertical="true"
-             android:textColor="@color/text_30"
-             android:textSize="15sp"
-             android:paddingLeft="10dp"
-             android:layout_toRightOf="@id/viprecharge_tv_cardnum"
-             android:layout_marginLeft="10dp"
-             android:gravity="center_vertical|left"
-             android:inputType="textPassword"
-             android:background="@null"
-             android:hint="请输入会员卡密码"
-             />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@drawable/kuang_gray_white"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="15dp"
+        >
+        <EditText
+            android:id="@+id/pwd_et_pwd"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:textColor="@color/text_30"
+            android:textSize="15sp"
+            android:paddingLeft="10dp"
+            android:layout_toRightOf="@id/viprecharge_tv_cardnum"
+            android:layout_marginLeft="10dp"
+            android:gravity="center_vertical|left"
+            android:inputType="textPassword"
+            android:background="@null"
+            android:textColorHint="@color/text_66"
+            android:hint="请输入会员卡密码"
+            />
 
-     </RelativeLayout>
+    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/pwd_rl_confirm"

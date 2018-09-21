@@ -30,6 +30,7 @@
             android:gravity="center_vertical|right"
             android:layout_toRightOf="@id/vip_tv_card"
             android:textColor="@color/text_30"
+            android:textColorHint="@color/text_66"
             android:textSize="15sp"
             android:background="@null"
             android:hint="请输入会员卡号"
@@ -232,6 +233,7 @@
             android:textColor="@color/text_30"
             android:inputType="number"
             android:textSize="15sp"
+            android:textColorHint="@color/text_66"
             android:background="@null"
             android:hint="请输入积分变动数量"
             />
