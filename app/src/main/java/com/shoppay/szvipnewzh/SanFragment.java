@@ -53,7 +53,7 @@ public class SanFragment extends Fragment {
     private Dialog dialog;
     private Dialog paydialog;
     private TextView tv_jiesuan;
-    private RadioButton rb_money, rb_wx, rb_zhifubao, rb_isYinlian, rb_yue, rb_qita;
+    private RadioButton rb_money, rb_wx, rb_zhifubao, rb_isYinlian, rb_qita;
     private boolean isMoney = true, isZhifubao = false, isYinlian = false, isQita = false, isWx = false;
     private RadioGroup mRadiogroup;
     private String orderAccount;
@@ -153,9 +153,9 @@ public class SanFragment extends Fragment {
         if (sysquanxian.isqita == 0) {
             rb_qita.setVisibility(View.GONE);
         }
-        if (sysquanxian.isyue == 0) {
-            rb_yue.setVisibility(View.GONE);
-        }
+//        if (sysquanxian.isyue == 0) {
+//            rb_yue.setVisibility(View.GONE);
+//        }
 
         rl_jiesuan.setOnClickListener(new NoDoubleClickListener() {
             @Override
