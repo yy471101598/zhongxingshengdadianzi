@@ -30,6 +30,9 @@ public class MergeLinearArraysUtil
      */
     public static byte[] mergeLinearArrays(List<byte[]> list)
     {
+        mReturnArray = null;
+        mArrayLength = 0;
+        mTempArray = null;
         for (int i = 0; i < list.size(); i++)
         {
             mArrayLength += list.get(i).length;
