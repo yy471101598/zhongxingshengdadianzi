@@ -1,13 +1,17 @@
 package com.shoppay.szvipnewzh;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -37,6 +41,7 @@ import com.shoppay.szvipnewzh.tools.DayinUtils;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
+import com.shoppay.szvipnewzh.tools.ToastUtils;
 import com.shoppay.szvipnewzh.tools.UrlTools;
 import com.shoppay.szvipnewzh.wxcode.MipcaActivityCapture;
 
@@ -85,6 +90,7 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
         }
     };
     private MyApplication app;
+    private static final int CAMERA_PERMISSIONS_REQUEST_CODE = 0x03;
     private SystemQuanxian sysquanxian;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -236,8 +242,16 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.rl_right:
-                Intent mipca = new Intent(ac, MipcaActivityCapture.class);
-                startActivityForResult(mipca, 111);
+                if (ContextCompat.checkSelfPermission(ac, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(ac, Manifest.permission.CAMERA)) {
+                        ToastUtils.showToast(ac, "您已经拒绝过一次");
+                    }
+                    ActivityCompat.requestPermissions(ac, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSIONS_REQUEST_CODE);
+                } else {//有权限直接调用系统相机拍照
+                    Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                    startActivityForResult(mipca, 111);
+                }
                 break;
             case R.id.rl_left:
                 finish();

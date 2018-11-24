@@ -1,15 +1,19 @@
 package com.shoppay.szvipnewzh;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Matrix;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.DisplayMetrics;
@@ -26,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.shoppay.szvipnewzh.tools.ActivityStack;
+import com.shoppay.szvipnewzh.tools.ToastUtils;
 import com.shoppay.szvipnewzh.wxcode.MipcaActivityCapture;
 
 import java.lang.reflect.Field;
@@ -50,6 +55,7 @@ public class FastConsumptionActivity extends FragmentActivity implements
 	private Activity ac;
 	private Intent intent;
   private RelativeLayout rl_right;
+	private static final int CAMERA_PERMISSIONS_REQUEST_CODE = 0x03;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -248,8 +254,16 @@ public class FastConsumptionActivity extends FragmentActivity implements
 		switch (v.getId()) {
 			case R.id.rl_right:
 				if(curTabIndex==0) {
-					Intent mipca = new Intent(ac, MipcaActivityCapture.class);
-					startActivityForResult(mipca, 111);
+					if (ContextCompat.checkSelfPermission(ac, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+
+						if (ActivityCompat.shouldShowRequestPermissionRationale(ac, Manifest.permission.CAMERA)) {
+							ToastUtils.showToast(ac, "您已经拒绝过一次");
+						}
+						ActivityCompat.requestPermissions(ac, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSIONS_REQUEST_CODE);
+					} else {//有权限直接调用系统相机拍照
+						Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+						startActivityForResult(mipca, 111);
+					}
 				}else{
 					Toast.makeText(ac,"只有会员消费可以扫描",Toast.LENGTH_SHORT).show();
 				}

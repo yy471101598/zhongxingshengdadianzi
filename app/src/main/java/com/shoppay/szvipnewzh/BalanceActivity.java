@@ -1,18 +1,23 @@
 package com.shoppay.szvipnewzh;
 
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -56,6 +61,7 @@ import com.shoppay.szvipnewzh.tools.NoDoubleClickListener;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.ShopXiaofeiDialog;
 import com.shoppay.szvipnewzh.tools.StringUtil;
+import com.shoppay.szvipnewzh.tools.ToastUtils;
 import com.shoppay.szvipnewzh.tools.UrlTools;
 import com.shoppay.szvipnewzh.wxcode.MipcaActivityCapture;
 
@@ -92,7 +98,7 @@ public class BalanceActivity extends FragmentActivity implements
     private String type = "否";
     private Dialog dialog;
     private Dialog paydialog;
-    private Context ac;
+    private Activity ac;
     private ShopChangeReceiver shopchangeReceiver;
     private DBAdapter dbAdapter;
     private String editString;
@@ -150,8 +156,8 @@ public class BalanceActivity extends FragmentActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_balance);
-        ac = context;
-        app= (MyApplication) getApplication();
+        ac = this;
+        app = (MyApplication) getApplication();
         dialog = DialogUtil.loadingDialog(BalanceActivity.this, 1);
         paydialog = DialogUtil.payloadingDialog(BalanceActivity.this, 1);
         dbAdapter = DBAdapter.getInstance(ac);
@@ -453,7 +459,7 @@ public class BalanceActivity extends FragmentActivity implements
                                 Toast.makeText(ac, "您选择的是会员结算，请确认会员信息是否正确", Toast.LENGTH_SHORT).show();
                             } else {//会员结算
 //
-                                ShopXiaofeiDialog.jiesuanDialog(app,true, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                                ShopXiaofeiDialog.jiesuanDialog(app, true, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                     @Override
                                     public void onResponse(Object response) {
                                         if (response.toString().equals("wxpay")) {
@@ -476,7 +482,7 @@ public class BalanceActivity extends FragmentActivity implements
                                 });
                             }
                         } else {//散客结算
-                            ShopXiaofeiDialog.jiesuanDialog(app,false, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                            ShopXiaofeiDialog.jiesuanDialog(app, false, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
                                     if (response.toString().equals("wxpay")) {
@@ -515,8 +521,17 @@ public class BalanceActivity extends FragmentActivity implements
         rl_right.setOnClickListener(new NoDoubleClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
-                Intent mipca = new Intent(ac, MipcaActivityCapture.class);
-                startActivityForResult(mipca, 111);
+
+                if (ContextCompat.checkSelfPermission(ac, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(BalanceActivity.this, Manifest.permission.CAMERA)) {
+                        ToastUtils.showToast(ac, "您已经拒绝过一次");
+                    }
+                    ActivityCompat.requestPermissions(ac, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSIONS_REQUEST_CODE);
+                } else {//有权限直接调用系统相机拍照
+                    Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                    startActivityForResult(mipca, 111);
+                }
             }
         });
 
@@ -546,6 +561,8 @@ public class BalanceActivity extends FragmentActivity implements
         tv_num.setText("0");
 
     }
+
+    private static final int CAMERA_PERMISSIONS_REQUEST_CODE = 0x03;
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position,
@@ -611,7 +628,7 @@ public class BalanceActivity extends FragmentActivity implements
                 map.put("payType", 3);
                 break;
         }
-        client.setTimeout(120*1000);
+        client.setTimeout(120 * 1000);
         LogUtils.d("xxparams", map.toString());
         String url = UrlTools.obtainUrl(ac, "?Source=3", "PayOnLine");
         LogUtils.d("xxurl", url);
@@ -653,8 +670,8 @@ public class BalanceActivity extends FragmentActivity implements
         });
     }
 
-    private  void jiesuan(String orderNum){
-         dialog.show();
+    private void jiesuan(String orderNum) {
+        dialog.show();
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(context);
         client.setCookieStore(myCookieStore);
@@ -663,7 +680,7 @@ public class BalanceActivity extends FragmentActivity implements
         List<ShopCar> shoplist = new ArrayList<>();
         double yfmoney = 0.0;
         double zfmoney = 0.0;
-        int point=0;
+        int point = 0;
         int num = 0;
         for (ShopCar numShop : list) {
             if (numShop.count == 0) {
@@ -672,7 +689,7 @@ public class BalanceActivity extends FragmentActivity implements
                 zfmoney = CommonUtils.add(zfmoney, Double.parseDouble(numShop.discountmoney));
                 yfmoney = CommonUtils.add(yfmoney, Double.parseDouble(CommonUtils.multiply(numShop.count + "", numShop.price)));
                 num = num + numShop.count;
-                point=point+(int)numShop.point;
+                point = point + (int) numShop.point;
             }
         }
         RequestParams params = new RequestParams();
@@ -691,9 +708,9 @@ public class BalanceActivity extends FragmentActivity implements
         }
         params.put("UserPwd", "");
         params.put("GlistCount", shoplist.size());
-        LogUtils.d("xxparams",shoplist.size()+"");
+        LogUtils.d("xxparams", shoplist.size() + "");
         for (int i = 0; i < shoplist.size(); i++) {
-            LogUtils.d("xxparams",shoplist.get(i).discount);
+            LogUtils.d("xxparams", shoplist.get(i).discount);
             params.put("Glist[" + i + "][GoodsID]", shoplist.get(i).goodsid);
             params.put("Glist[" + i + "][number]", shoplist.get(i).count);
             params.put("Glist[" + i + "][GoodsPoint]", point);
@@ -726,8 +743,8 @@ public class BalanceActivity extends FragmentActivity implements
                                 dbAdapter.deleteShopCar();
                             }
                         }
-                       finish();
-                    }else{
+                        finish();
+                    } else {
                         Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                     }
                 } catch (Exception e) {

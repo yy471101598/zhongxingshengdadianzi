@@ -1,14 +1,18 @@
 package com.shoppay.szvipnewzh;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -34,6 +38,7 @@ import com.shoppay.szvipnewzh.tools.ActivityStack;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
+import com.shoppay.szvipnewzh.tools.ToastUtils;
 import com.shoppay.szvipnewzh.tools.UrlTools;
 import com.shoppay.szvipnewzh.wxcode.MipcaActivityCapture;
 
@@ -112,6 +117,7 @@ public class DuihuanjiluActivity extends Activity {
             }
         }
     };
+    private static final int CAMERA_PERMISSIONS_REQUEST_CODE = 0x03;
 
     private void obtainDuihuanMsg() {
         dialog.show();
@@ -119,9 +125,9 @@ public class DuihuanjiluActivity extends Activity {
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
         RequestParams params = new RequestParams();
-        LogUtils.d("xxparams",params.toString());
-        String url= UrlTools.obtainUrl(ac,"?Source=3","PointGiftExchangeOrderGetList");
-        LogUtils.d("xxurl",url);
+        LogUtils.d("xxparams", params.toString());
+        String url = UrlTools.obtainUrl(ac, "?Source=3", "PointGiftExchangeOrderGetList");
+        LogUtils.d("xxurl", url);
         client.post(url, params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -129,9 +135,10 @@ public class DuihuanjiluActivity extends Activity {
                     dialog.dismiss();
                     LogUtils.d("xxDuihuanS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
-                    if(jso.getInt("flag")==1){
+                    if (jso.getInt("flag") == 1) {
                         Gson gson = new Gson();
-                        Type listType = new TypeToken<List<DuihuanRecord>>() {}.getType();
+                        Type listType = new TypeToken<List<DuihuanRecord>>() {
+                        }.getType();
                         list = gson.fromJson(jso.getString("vdata"), listType);
                         listView.setVisibility(View.VISIBLE);
                         adapter = new DuihuanRecordAdapter(ac, list);
@@ -139,7 +146,7 @@ public class DuihuanjiluActivity extends Activity {
 
                     } else {
                         listView.setVisibility(View.GONE);
-                        Toast.makeText(ac,jso.getString("msg"), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ac, jso.getString("msg"), Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
                     dialog.dismiss();
@@ -168,7 +175,7 @@ public class DuihuanjiluActivity extends Activity {
         dialog = DialogUtil.loadingDialog(ac, 1);
         PreferenceHelper.write(MyApplication.context, "shoppay", "viptoast", "未查询到会员");
         ActivityStack.create().addActivity(DuihuanjiluActivity.this);
-       obtainDuihuanMsg();
+        obtainDuihuanMsg();
         tvTitle.setText("兑换记录");
         rlRight.setVisibility(View.GONE);
         vipEtCard.addTextChangedListener(new TextWatcher() {
@@ -261,8 +268,6 @@ public class DuihuanjiluActivity extends Activity {
     }
 
 
-
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -271,12 +276,9 @@ public class DuihuanjiluActivity extends Activity {
 
     @Override
     protected void onStop() {
-        try
-        {
+        try {
             new ReadCardOpt().overReadCard();
-        }
-        catch (RemoteException e)
-        {
+        } catch (RemoteException e) {
             e.printStackTrace();
         }
         super.onStop();
@@ -301,8 +303,16 @@ public class DuihuanjiluActivity extends Activity {
                 finish();
                 break;
             case rl_right:
-                Intent mipca =new Intent(ac, MipcaActivityCapture.class);
-                startActivityForResult(mipca,111);
+                if (ContextCompat.checkSelfPermission(ac, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(ac, Manifest.permission.CAMERA)) {
+                        ToastUtils.showToast(ac, "您已经拒绝过一次");
+                    }
+                    ActivityCompat.requestPermissions(ac, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSIONS_REQUEST_CODE);
+                } else {//有权限直接调用系统相机拍照
+                    Intent mipca = new Intent(ac, MipcaActivityCapture.class);
+                    startActivityForResult(mipca, 111);
+                }
                 break;
         }
     }
@@ -310,15 +320,16 @@ public class DuihuanjiluActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode){
+        switch (requestCode) {
             case 111:
-                if(resultCode==RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     vipEtCard.setText(data.getStringExtra("codedata"));
                 }
                 break;
 
         }
     }
+
     /**
      * 广播接收器
      *
