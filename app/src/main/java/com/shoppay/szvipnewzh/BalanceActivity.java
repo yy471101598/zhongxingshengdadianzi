@@ -455,7 +455,7 @@ public class BalanceActivity extends FragmentActivity implements
                 } else {
                     if (CommonUtils.checkNet(getApplicationContext())) {
                         if (type.equals("否")) {
-                            if (tv_vipjifen.getText().toString().equals("") || tv_vipjifen.getText().toString().equals("获取中")) {
+                            if (!isSuccess) {
                                 Toast.makeText(ac, "您选择的是会员结算，请确认会员信息是否正确", Toast.LENGTH_SHORT).show();
                             } else {//会员结算
 //

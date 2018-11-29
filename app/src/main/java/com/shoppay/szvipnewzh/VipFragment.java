@@ -73,6 +73,7 @@ public class VipFragment extends Fragment  {
     private RelativeLayout rl_password;
     private RadioButton rb_money, rb_wx, rb_zhifubao, rb_isYinlian, rb_yue, rb_qita;
     private EditText et_password;
+    private boolean isSuccess=false;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -89,8 +90,10 @@ public class VipFragment extends Fragment  {
                     PreferenceHelper.write(getActivity(), "shoppay", "Discount", info.getDiscount());
                     PreferenceHelper.write(getActivity(), "shoppay", "DiscountPoint", info.getDiscountPoint());
                     PreferenceHelper.write(getActivity(), "shoppay", "jifen", info.getMemPoint());
+                    isSuccess=true;
                     break;
                 case 2:
+                    isSuccess=false;
                     tv_vipname.setText("");
                     tv_vipjf.setText("");
                     tv_vipyue.setText("");
@@ -282,7 +285,7 @@ public class VipFragment extends Fragment  {
                     tv_zhmoney.setText("0.00");
                     tv_obtainjf.setText("0.00");
                 } else {
-                    if (PreferenceHelper.readString(MyApplication.context, "shoppay", "memid", "123").equals("123")) {
+                    if (!isSuccess) {
                         Toast.makeText(MyApplication.context, PreferenceHelper.readString(MyApplication.context, "shoppay", "viptoast", "未查询到会员"), Toast.LENGTH_SHORT).show();
                         et_xfmoney.setText("");
                     } else {
@@ -458,8 +461,7 @@ public class VipFragment extends Fragment  {
         rl_jiesuan.setOnClickListener(new NoDoubleClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
-                if (et_card.getText().toString().equals("")
-                        || et_card.getText().toString() == null) {
+                if (!isSuccess) {
                     Toast.makeText(MyApplication.context, "请输入会员卡号",
                             Toast.LENGTH_SHORT).show();
                 } else if (et_xfmoney.getText().toString().equals("")
