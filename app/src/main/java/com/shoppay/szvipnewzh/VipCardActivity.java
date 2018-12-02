@@ -40,6 +40,7 @@ import com.shoppay.szvipnewzh.tools.DateUtils;
 import com.shoppay.szvipnewzh.tools.DayinUtils;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
+import com.shoppay.szvipnewzh.tools.NoDoubleClickListener;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.ToastUtils;
 import com.shoppay.szvipnewzh.tools.UrlTools;
@@ -73,7 +74,6 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
     private EditText et_password;
     private RelativeLayout rl_right;
     private boolean ispassword = false;
-    private boolean isClick=true;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -82,9 +82,11 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
                 case 1:
                     VipInfo info = (VipInfo) msg.obj;
                     tv_tjname.setText(info.getMemName());
+                    tjrmemId = info.getMemID();
                     break;
                 case 2:
-                    tv_tjname.setText("获取中");
+                    tv_tjname.setText("");
+                    tjrmemId = "";
                     break;
             }
         }
@@ -92,42 +94,45 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
     private MyApplication app;
     private static final int CAMERA_PERMISSIONS_REQUEST_CODE = 0x03;
     private SystemQuanxian sysquanxian;
+    private RelativeLayout rl_cx, rl_clear;
+    private String tjrmemId = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vipcard);
         ac = this;
-        app= (MyApplication) getApplication();
-        sysquanxian=app.getSysquanxian();
+        app = (MyApplication) getApplication();
+        sysquanxian = app.getSysquanxian();
         dialog = DialogUtil.loadingDialog(VipCardActivity.this, 1);
         ActivityStack.create().addActivity(ac);
         initView();
         vipDengjiList("no");
 
-        et_tjcard.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                if (delayRun != null) {
-                    //每次editText有变化的时候，则移除上次发出的延迟线程
-                    handler.removeCallbacks(delayRun);
-                }
-                editString = editable.toString();
-
-                //延迟800ms，如果不再输入字符，则执行该线程的run方法
-
-                handler.postDelayed(delayRun, 800);
-            }
-        });
+//        et_tjcard.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+//
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable editable) {
+//                if (delayRun != null) {
+//                    //每次editText有变化的时候，则移除上次发出的延迟线程
+//                    handler.removeCallbacks(delayRun);
+//                }
+//                editString = editable.toString();
+//
+//                //延迟800ms，如果不再输入字符，则执行该线程的run方法
+//
+//                handler.postDelayed(delayRun, 800);
+//            }
+//        });
 
     }
 
@@ -144,11 +149,12 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
     };
 
     private void ontainVipInfo() {
+        dialog.show();
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
         RequestParams params = new RequestParams();
-        params.put("MemCard", editString);
+        params.put("MemCard", et_tjcard.getText().toString());
         LogUtils.d("xxparams", params.toString());
         String url = UrlTools.obtainUrl(ac, "?Source=3", "GetMem");
         LogUtils.d("xxurl", url);
@@ -158,6 +164,7 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
                 try {
                     LogUtils.d("xxVipinfoS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
+                    dialog.dismiss();
                     if (jso.getInt("flag") == 1) {
                         Gson gson = new Gson();
                         VipInfoMsg infomsg = gson.fromJson(new String(responseBody, "UTF-8"), VipInfoMsg.class);
@@ -166,19 +173,24 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
                         msg.obj = infomsg.getVdata().get(0);
                         handler.sendMessage(msg);
                     } else {
+                        Toast.makeText(ac, jso.getString("msg"), Toast.LENGTH_SHORT).show();
                         Message msg = handler.obtainMessage();
                         msg.what = 2;
                         handler.sendMessage(msg);
                     }
                 } catch (Exception e) {
+                    dialog.dismiss();
                     Message msg = handler.obtainMessage();
                     msg.what = 2;
                     handler.sendMessage(msg);
+                    Toast.makeText(ac, "获取推荐人信息失败", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                dialog.dismiss();
+                Toast.makeText(ac, "获取推荐人信息失败", Toast.LENGTH_SHORT).show();
                 Message msg = handler.obtainMessage();
                 msg.what = 2;
                 handler.sendMessage(msg);
@@ -208,6 +220,8 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
         tv_vipdj = (TextView) findViewById(R.id.vipcard_tv_vipdj);
         tv_tjname = (TextView) findViewById(R.id.vipcard_tv_tjname);
         tv_endtime = (TextView) findViewById(R.id.vipcard_tv_endtime);
+        rl_cx = findViewById(R.id.rl_tjr_cx);
+        rl_clear = findViewById(R.id.rl_tjr_clear);
         tv_title.setText("会员办卡");
         if (sysquanxian.ispassword == 1) {
             tv_passstate.setVisibility(View.VISIBLE);
@@ -223,6 +237,85 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
         rl_vipdj.setOnClickListener(this);
         tv_endtime.setOnClickListener(this);
         tv_vipsr.setOnClickListener(this);
+
+        rl_cx.setOnClickListener(new NoDoubleClickListener() {
+            @Override
+            protected void onNoDoubleClick(View view) {
+                if (et_tjcard.getText().toString().equals("")) {
+                    Toast.makeText(getApplicationContext(), "请输入推荐人卡号",
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    ontainVipInfo();
+                }
+            }
+        });
+
+        rl_clear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                et_tjcard.setText("");
+                tv_tjname.setText("");
+                tjrmemId = "";
+
+            }
+        });
+
+        rl_save.setOnClickListener(new NoDoubleClickListener() {
+            @Override
+            protected void onNoDoubleClick(View view) {
+                if (et_vipcard.getText().toString().equals("")
+                        || et_vipcard.getText().toString() == null) {
+                    Toast.makeText(getApplicationContext(), "请输入会员卡号",
+                            Toast.LENGTH_SHORT).show();
+                }
+//                else if (et_vipname.getText().toString().equals("")
+//                        || et_vipname.getText().toString() == null) {
+//                    Toast.makeText(getApplicationContext(), "请输入会员姓名",
+//                            Toast.LENGTH_SHORT).show();
+//                }
+//                else if (et_phone.getText().toString().equals("")
+//                        || et_phone.getText().toString() == null) {
+//                    Toast.makeText(getApplicationContext(), "请输入手机号码",
+//                            Toast.LENGTH_SHORT).show();
+//                }
+                else if (tv_vipdj.getText().toString().equals("请选择")) {
+                    Toast.makeText(getApplicationContext(), "请选择会员等级",
+                            Toast.LENGTH_SHORT).show();
+                }
+                else if (!et_tjcard.getText().toString().equals("")&&tjrmemId.equals("")) {
+                    Toast.makeText(getApplicationContext(), "请输入正确的推荐人卡号",
+                            Toast.LENGTH_SHORT).show();
+                }
+                else if (ispassword) {
+                    if (et_password.getText().toString() == null || et_password.getText().toString().equals("")) {
+                        Toast.makeText(getApplicationContext(), "请输入会员卡密码",
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        if (CommonUtils.checkNet(getApplicationContext())) {
+                            try {
+                                saveVipCard();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            Toast.makeText(getApplicationContext(), "请检查网络是否可用",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } else {
+                    if (CommonUtils.checkNet(getApplicationContext())) {
+                        try {
+                            saveVipCard();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Toast.makeText(getApplicationContext(), "请检查网络是否可用",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -255,63 +348,6 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
                 break;
             case R.id.rl_left:
                 finish();
-                break;
-            case R.id.vipcard_rl_save:
-                if (et_vipcard.getText().toString().equals("")
-                        || et_vipcard.getText().toString() == null) {
-                    Toast.makeText(getApplicationContext(), "请输入会员卡号",
-                            Toast.LENGTH_SHORT).show();
-                }
-//                else if (et_vipname.getText().toString().equals("")
-//                        || et_vipname.getText().toString() == null) {
-//                    Toast.makeText(getApplicationContext(), "请输入会员姓名",
-//                            Toast.LENGTH_SHORT).show();
-//                }
-//                else if (et_phone.getText().toString().equals("")
-//                        || et_phone.getText().toString() == null) {
-//                    Toast.makeText(getApplicationContext(), "请输入手机号码",
-//                            Toast.LENGTH_SHORT).show();
-//                }
-                else if (tv_vipdj.getText().toString().equals("请选择")) {
-                    Toast.makeText(getApplicationContext(), "请选择会员等级",
-                            Toast.LENGTH_SHORT).show();
-                }
-//                else if (CommonUtils.isMobileNO(et_phone.getText().toString())) {
-//                    Toast.makeText(getApplicationContext(), "请输入正确的手机号码",
-//                            Toast.LENGTH_SHORT).show();
-//                }
-                else if (ispassword) {
-                    if (et_password.getText().toString() == null || et_password.getText().toString().equals("")) {
-                        Toast.makeText(getApplicationContext(), "请输入会员卡密码",
-                                Toast.LENGTH_SHORT).show();
-                    }else{
-                        if (CommonUtils.checkNet(getApplicationContext())) {
-                            try {
-                                if(isClick) {
-                                    saveVipCard();
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        } else {
-                            Toast.makeText(getApplicationContext(), "请检查网络是否可用",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                } else {
-                    if (CommonUtils.checkNet(getApplicationContext())) {
-                        try {
-                            if(isClick) {
-                                saveVipCard();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        Toast.makeText(getApplicationContext(), "请检查网络是否可用",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
                 break;
             case R.id.vipcard_rl_chose:
                 if (list == null || list.size() == 0) {
@@ -384,7 +420,6 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
 
     private void saveVipCard() throws Exception {
         dialog.show();
-        isClick=false;
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
@@ -422,12 +457,7 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
         } else {
             map.put("MemBirthday", tv_vipsr.getText().toString());
         }
-//        if (tv_tjname.getText().toString().equals("")
-//                || tv_tjname.getText().toString() == null) {
-//            map.put("memRecommendId", "");//推介人id
-//        } else {
-//            map.put("memRecommendId", Integer.parseInt( PreferenceHelper.readString(ac, "shoppay", "memid", "")));//推介人id
-//        }
+        map.put("MemRecommendID", tjrmemId);//推介人id
 //        if (tv_endtime.getText().toString().equals("年-月-日")) {
 //            map.put("memPastTime", "");//过期时间
 //        } else {
@@ -458,11 +488,9 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
                             }
                         }
                     } else {
-                          isClick=true;
                         Toast.makeText(ac, jso.getString("msg"), Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
-                    isClick=true;
                     Toast.makeText(ac, "会员卡办理失败，请重新登录", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -470,7 +498,6 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                 dialog.dismiss();
-                isClick=true;
                 Toast.makeText(ac, "会员卡办理失败，请重新登录", Toast.LENGTH_SHORT).show();
             }
         });
@@ -486,12 +513,9 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
 
     @Override
     protected void onStop() {
-        try
-        {
+        try {
             new ReadCardOpt().overReadCard();
-        }
-        catch (RemoteException e)
-        {
+        } catch (RemoteException e) {
             e.printStackTrace();
         }
         super.onStop();

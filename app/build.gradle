@@ -7,8 +7,8 @@ android {
         applicationId "com.shoppay.szvipnewzh"
         minSdkVersion 19
         targetSdkVersion 27
-        versionCode 65
-        versionName "1.6.5"
+        versionCode 66
+        versionName "1.6.6"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
