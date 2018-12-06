@@ -26,12 +26,15 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
+import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.bean.VipInfo;
 import com.shoppay.szvipnewzh.bean.VipInfoMsg;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
+import com.shoppay.szvipnewzh.card.ReadCardOptTv;
 import com.shoppay.szvipnewzh.tools.ActivityStack;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
+import com.shoppay.szvipnewzh.tools.NullUtils;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.StringUtil;
 import com.shoppay.szvipnewzh.tools.ToastUtils;
@@ -89,6 +92,15 @@ public class VipChaxunActivity extends Activity {
     TextView vipTvGuoqitime;
     @Bind(R.id.vip_tv_xiaofei)
     TextView vipTvXiaofei;
+    @Bind(R.id.rl_tvcard)
+    RelativeLayout rl_tvcard;
+    @Bind(R.id.rl_etcard)
+    RelativeLayout rl_card;
+    @Bind(R.id.tv_tvcard)
+    TextView tv_tvcard;
+    private boolean isVipcar = false;
+    private SystemQuanxian sysquanxian;
+    private MyApplication app;
     private boolean isSuccess = false;
     private Activity ac;
     private static final int CAMERA_PERMISSIONS_REQUEST_CODE = 0x03;
@@ -151,6 +163,17 @@ public class VipChaxunActivity extends Activity {
         PreferenceHelper.write(MyApplication.context, "shoppay", "viptoast", "未查询到会员");
         ActivityStack.create().addActivity(VipChaxunActivity.this);
 //        obtainVipRecharge();
+        app= (MyApplication) getApplication();
+        sysquanxian=app.getSysquanxian();
+        if (Integer.parseInt(NullUtils.noNullHandle(sysquanxian.isvipcard).toString()) == 0) {
+            rl_tvcard.setVisibility(View.GONE);
+            rl_card.setVisibility(View.VISIBLE);
+            isVipcar = false;
+        } else {
+            rl_tvcard.setVisibility(View.VISIBLE);
+            rl_card.setVisibility(View.GONE);
+            isVipcar = true;
+        }
         tvTitle.setText("会员查询");
         vipEtCard.addTextChangedListener(new TextWatcher() {
             @Override
@@ -199,6 +222,9 @@ public class VipChaxunActivity extends Activity {
     };
 
     private void ontainVipInfo() {
+        if (isVipcar) {
+            dialog.show();
+        }
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
@@ -211,6 +237,9 @@ public class VipChaxunActivity extends Activity {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 try {
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     LogUtils.d("xxVipinfoS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                     if (jso.getInt("flag") == 1) {
@@ -226,6 +255,9 @@ public class VipChaxunActivity extends Activity {
                         handler.sendMessage(msg);
                     }
                 } catch (Exception e) {
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     Message msg = handler.obtainMessage();
                     msg.what = 2;
                     handler.sendMessage(msg);
@@ -234,6 +266,9 @@ public class VipChaxunActivity extends Activity {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                if (isVipcar) {
+                    dialog.dismiss();
+                }
                 Message msg = handler.obtainMessage();
                 msg.what = 2;
                 handler.sendMessage(msg);
@@ -245,14 +280,23 @@ public class VipChaxunActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        new ReadCardOpt(vipEtCard);
+        if (isVipcar) {
+            new ReadCardOptTv(tv_tvcard);
+            ontainVipInfo();
+        } else {
+            new ReadCardOpt(vipEtCard);
+        }
     }
 
     @Override
     protected void onStop() {
         try
         {
-            new ReadCardOpt().overReadCard();
+            if (isVipcar) {
+                new ReadCardOptTv().overReadCard();
+            } else {
+                new ReadCardOpt().overReadCard();
+            }
         }
         catch (RemoteException e)
         {
@@ -300,7 +344,13 @@ public class VipChaxunActivity extends Activity {
         switch (requestCode) {
             case 111:
                 if (resultCode == RESULT_OK) {
-                    vipEtCard.setText(data.getStringExtra("codedata"));
+                    if (isVipcar) {
+                        tv_tvcard.setText(data.getStringExtra("codedata"));
+                        editString = data.getStringExtra("codedata");
+                        ontainVipInfo();
+                    } else {
+                        vipEtCard.setText(data.getStringExtra("codedata"));
+                    }
                 }
                 break;
 

@@ -41,14 +41,15 @@ import com.shoppay.szvipnewzh.adapter.LeftAdapter;
 import com.shoppay.szvipnewzh.bean.Shop;
 import com.shoppay.szvipnewzh.bean.ShopCar;
 import com.shoppay.szvipnewzh.bean.ShopClass;
+import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.bean.VipInfo;
 import com.shoppay.szvipnewzh.bean.VipInfoMsg;
 import com.shoppay.szvipnewzh.bean.VipPayMsg;
 import com.shoppay.szvipnewzh.bean.Zhekou;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
+import com.shoppay.szvipnewzh.card.ReadCardOptTv;
 import com.shoppay.szvipnewzh.db.DBAdapter;
 import com.shoppay.szvipnewzh.http.InterfaceBack;
-import com.shoppay.szvipnewzh.tools.ActivityStack;
 import com.shoppay.szvipnewzh.tools.BluetoothUtil;
 import com.shoppay.szvipnewzh.tools.CommonUtils;
 import com.shoppay.szvipnewzh.tools.DateUtils;
@@ -58,6 +59,7 @@ import com.shoppay.szvipnewzh.tools.ESCUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
 import com.shoppay.szvipnewzh.tools.MergeLinearArraysUtil;
 import com.shoppay.szvipnewzh.tools.NoDoubleClickListener;
+import com.shoppay.szvipnewzh.tools.NullUtils;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.ShopXiaofeiDialog;
 import com.shoppay.szvipnewzh.tools.StringUtil;
@@ -151,6 +153,11 @@ public class BalanceActivity extends FragmentActivity implements
     private String orderAccount;
     private String paytype;
     private MyApplication app;
+    private LinearLayout li_vip;
+    private RelativeLayout rl_tvcard;
+    private TextView tv_tvcard;
+    private boolean isVipcar = false;
+    private SystemQuanxian sysquanxian;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,6 +165,7 @@ public class BalanceActivity extends FragmentActivity implements
         setContentView(R.layout.activity_balance);
         ac = this;
         app = (MyApplication) getApplication();
+        sysquanxian = app.getSysquanxian();
         dialog = DialogUtil.loadingDialog(BalanceActivity.this, 1);
         paydialog = DialogUtil.payloadingDialog(BalanceActivity.this, 1);
         dbAdapter = DBAdapter.getInstance(ac);
@@ -238,14 +246,22 @@ public class BalanceActivity extends FragmentActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        new ReadCardOpt(et_card);
-
+        if (isVipcar) {
+            new ReadCardOptTv(tv_tvcard);
+            ontainVipInfo();
+        } else {
+            new ReadCardOpt(et_card);
+        }
     }
 
     @Override
     protected void onStop() {
         try {
-            new ReadCardOpt().overReadCard();
+            if (isVipcar) {
+                new ReadCardOptTv().overReadCard();
+            } else {
+                new ReadCardOpt().overReadCard();
+            }
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -368,6 +384,9 @@ public class BalanceActivity extends FragmentActivity implements
     }
 
     private void ontainVipInfo() {
+        if (isVipcar) {
+            dialog.show();
+        }
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
@@ -382,6 +401,9 @@ public class BalanceActivity extends FragmentActivity implements
                 try {
                     LogUtils.d("xxVipinfoS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     if (jso.getInt("flag") == 1) {
                         Gson gson = new Gson();
                         VipInfoMsg infomsg = gson.fromJson(new String(responseBody, "UTF-8"), VipInfoMsg.class);
@@ -395,6 +417,9 @@ public class BalanceActivity extends FragmentActivity implements
                         handler.sendMessage(msg);
                     }
                 } catch (Exception e) {
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     Message msg = handler.obtainMessage();
                     msg.what = 2;
                     handler.sendMessage(msg);
@@ -403,6 +428,9 @@ public class BalanceActivity extends FragmentActivity implements
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                if (isVipcar) {
+                    dialog.dismiss();
+                }
                 Message msg = handler.obtainMessage();
                 msg.what = 2;
                 handler.sendMessage(msg);
@@ -425,6 +453,12 @@ public class BalanceActivity extends FragmentActivity implements
         rl_jiesuan = (RelativeLayout) findViewById(R.id.balance_rl_jiesan);
         rl_vipyue = (RelativeLayout) findViewById(R.id.balance_rl_vipyue);
         rl_vipdengji = (RelativeLayout) findViewById(R.id.balance_rl_vipdengji);
+
+        li_vip = findViewById(R.id.li_vip);
+
+        rl_tvcard = findViewById(R.id.rl_tvcard);
+        tv_tvcard = findViewById(R.id.tv_tvcard);
+
 
         tv_jifen = (TextView) findViewById(R.id.balance_tv_jifen);
         tv_vipjifen = (TextView) findViewById(R.id.balance_tv_vipjifen);
@@ -545,20 +579,32 @@ public class BalanceActivity extends FragmentActivity implements
         type = "否";
         PreferenceHelper.write(ac, "shoppay", "isSan", false);
         li_jifen.setVisibility(View.VISIBLE);
-        rl_card.setVisibility(View.VISIBLE);
-        rl_vipname.setVisibility(View.VISIBLE);
-        rl_vipdengji.setVisibility(View.VISIBLE);
-        rl_vipjifen.setVisibility(View.VISIBLE);
-        rl_vipyue.setVisibility(View.VISIBLE);
+//        rl_card.setVisibility(View.VISIBLE);
+//        rl_vipname.setVisibility(View.VISIBLE);
+//        rl_vipdengji.setVisibility(View.VISIBLE);
+//        rl_vipjifen.setVisibility(View.VISIBLE);
+//        rl_vipyue.setVisibility(View.VISIBLE);
+        li_vip.setVisibility(View.VISIBLE);
         PreferenceHelper.write(ac, "shoppay", "memid", "");
         et_card.setText("");
+        tv_tvcard.setText("");
         tv_vipjifen.setText("");
         tv_vipname.setText("");
         tv_vipyue.setText("");
+        tv_vipdengji.setText("");
         tv_money.setText("0");
-        tv_vipdengji.setText("0");
         tv_jifen.setText("0");
         tv_num.setText("0");
+        if (Integer.parseInt(NullUtils.noNullHandle(sysquanxian.isvipcard).toString()) == 0) {
+            rl_tvcard.setVisibility(View.GONE);
+            rl_card.setVisibility(View.VISIBLE);
+            isVipcar = false;
+        } else {
+            rl_tvcard.setVisibility(View.VISIBLE);
+            rl_card.setVisibility(View.GONE);
+            isVipcar = true;
+        }
+
 
     }
 
@@ -590,7 +636,13 @@ public class BalanceActivity extends FragmentActivity implements
         switch (requestCode) {
             case 111:
                 if (resultCode == RESULT_OK) {
-                    et_card.setText(data.getStringExtra("codedata"));
+                    if (isVipcar) {
+                        tv_tvcard.setText(data.getStringExtra("codedata"));
+                        editString = data.getStringExtra("codedata");
+                        ontainVipInfo();
+                    } else {
+                        et_card.setText(data.getStringExtra("codedata"));
+                    }
                 }
                 break;
             case 222:
@@ -775,11 +827,13 @@ public class BalanceActivity extends FragmentActivity implements
                 tv_no.setTextColor(getResources().getColor(R.color.text_30));
                 type = "是";
                 li_jifen.setVisibility(View.GONE);
-                rl_card.setVisibility(View.GONE);
-                rl_vipname.setVisibility(View.GONE);
-                rl_vipjifen.setVisibility(View.GONE);
-                rl_vipdengji.setVisibility(View.GONE);
-                rl_vipyue.setVisibility(View.GONE);
+//                rl_card.setVisibility(View.GONE);
+//                rl_vipname.setVisibility(View.GONE);
+//                rl_vipjifen.setVisibility(View.GONE);
+//                rl_vipdengji.setVisibility(View.GONE);
+//                rl_vipyue.setVisibility(View.GONE);
+                li_vip.setVisibility(View.GONE);
+                isSuccess = false;
                 dbAdapter.deleteShopCar();
                 tv_money.setText("0");
                 tv_jifen.setText("0");
@@ -802,19 +856,22 @@ public class BalanceActivity extends FragmentActivity implements
                 type = "否";
                 PreferenceHelper.write(ac, "shoppay", "isSan", false);
                 li_jifen.setVisibility(View.VISIBLE);
-                rl_card.setVisibility(View.VISIBLE);
-                rl_vipname.setVisibility(View.VISIBLE);
-                rl_vipdengji.setVisibility(View.VISIBLE);
-                rl_vipjifen.setVisibility(View.VISIBLE);
-                rl_vipyue.setVisibility(View.VISIBLE);
+//                rl_card.setVisibility(View.VISIBLE);
+//                rl_vipname.setVisibility(View.VISIBLE);
+//                rl_vipdengji.setVisibility(View.VISIBLE);
+//                rl_vipjifen.setVisibility(View.VISIBLE);
+//                rl_vipyue.setVisibility(View.VISIBLE);
+                li_vip.setVisibility(View.VISIBLE);
+                isSuccess = false;
                 dbAdapter.deleteShopCar();
                 PreferenceHelper.write(ac, "shoppay", "memid", "");
                 et_card.setText("");
+                tv_tvcard.setText("");
                 tv_vipjifen.setText("");
                 tv_vipname.setText("");
                 tv_vipyue.setText("");
                 tv_money.setText("0");
-                tv_vipdengji.setText("0");
+                tv_vipdengji.setText("");
                 tv_jifen.setText("0");
                 tv_num.setText("0");
                 for (ShopClass c : list) {

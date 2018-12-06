@@ -36,6 +36,7 @@ import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.bean.VipInfo;
 import com.shoppay.szvipnewzh.bean.VipInfoMsg;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
+import com.shoppay.szvipnewzh.card.ReadCardOptTv;
 import com.shoppay.szvipnewzh.http.InterfaceBack;
 import com.shoppay.szvipnewzh.tools.ActivityStack;
 import com.shoppay.szvipnewzh.tools.BluetoothUtil;
@@ -45,6 +46,7 @@ import com.shoppay.szvipnewzh.tools.DayinUtils;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
 import com.shoppay.szvipnewzh.tools.NoDoubleClickListener;
+import com.shoppay.szvipnewzh.tools.NullUtils;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.StringUtil;
 import com.shoppay.szvipnewzh.tools.UrlTools;
@@ -74,6 +76,9 @@ public class VipFragment extends Fragment  {
     private RadioButton rb_money, rb_wx, rb_zhifubao, rb_isYinlian, rb_yue, rb_qita;
     private EditText et_password;
     private boolean isSuccess=false;
+    private RelativeLayout rl_tvcard, rl_card;
+    private TextView tv_tvcard;
+    private boolean isVipcar = false;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -320,7 +325,13 @@ public class VipFragment extends Fragment  {
         public void onReceive(Context context, Intent intent) {
             //拿到进度，更新UI
             String code = intent.getStringExtra("code");
-            et_card.setText(code);
+            if (isVipcar) {
+                tv_tvcard.setText(code);
+                editString = code;
+                obtainVipInfo();
+            } else {
+                et_card.setText(code);
+            }
         }
 
     }
@@ -329,7 +340,12 @@ public class VipFragment extends Fragment  {
     @Override
     public void onResume() {
         super.onResume();
-        new ReadCardOpt(et_card);
+        if (isVipcar) {
+            new ReadCardOptTv(tv_tvcard);
+            obtainVipInfo();
+        } else {
+            new ReadCardOpt(et_card);
+        }
     }
 
     @Override
@@ -337,7 +353,11 @@ public class VipFragment extends Fragment  {
         //终止检卡
         try
         {
-            new ReadCardOpt().overReadCard();
+            if (isVipcar) {
+                new ReadCardOptTv().overReadCard();
+            } else {
+                new ReadCardOpt().overReadCard();
+            }
         }
         catch (RemoteException e)
         {
@@ -365,6 +385,9 @@ public class VipFragment extends Fragment  {
 
 
     private void obtainVipInfo() {
+        if (isVipcar) {
+            dialog.show();
+        }
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(getActivity());
         client.setCookieStore(myCookieStore);
@@ -377,6 +400,9 @@ public class VipFragment extends Fragment  {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 try {
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     LogUtils.d("xxVipinfoS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                     if (jso.getInt("flag") == 1) {
@@ -392,6 +418,9 @@ public class VipFragment extends Fragment  {
                         handler.sendMessage(msg);
                     }
                 } catch (Exception e) {
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     Message msg = handler.obtainMessage();
                     msg.what = 2;
                     handler.sendMessage(msg);
@@ -400,6 +429,9 @@ public class VipFragment extends Fragment  {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                if (isVipcar) {
+                    dialog.dismiss();
+                }
                 Message msg = handler.obtainMessage();
                 msg.what = 2;
                 handler.sendMessage(msg);
@@ -432,6 +464,18 @@ public class VipFragment extends Fragment  {
         rb_wx = (RadioButton) view.findViewById(R.id.rb_wx);
         rb_yue = (RadioButton) view.findViewById(R.id.rb_yue);
         rb_qita = (RadioButton) view.findViewById(R.id.rb_qita);
+        rl_tvcard = view.findViewById(R.id.rl_tvcard);
+        tv_tvcard = view.findViewById(R.id.tv_tvcard);
+        rl_card = view.findViewById(R.id.rl_etcard);
+        if (Integer.parseInt(NullUtils.noNullHandle(sysquanxian.isvipcard).toString()) == 0) {
+            rl_tvcard.setVisibility(View.GONE);
+            rl_card.setVisibility(View.VISIBLE);
+            isVipcar = false;
+        } else {
+            rl_tvcard.setVisibility(View.VISIBLE);
+            rl_card.setVisibility(View.GONE);
+            isVipcar = true;
+        }
         if (sysquanxian.isweixin == 0) {
             rb_wx.setVisibility(View.GONE);
         }

@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Created by songxiaotao on 2018/1/17.
  */
 
-public class SystemQuanxian implements Serializable{
+public class SystemQuanxian implements Serializable {
 //    1.1是否允许修改折后单价
 //    1.2是否允许余额支付
 //    1.3是否允许现金支付
@@ -16,6 +16,7 @@ public class SystemQuanxian implements Serializable{
 //    1.7是否启用密码验证
 //    1.8 是否微信支付为标记模式
 //    1.9 是否支付宝支付为标记模式
+    // 2.0是否启用会员刷卡（启用则所有需要获取会员信息的地方只允许刷卡获取
 
     public int ischangemoney;
     public int isyue;
@@ -27,4 +28,5 @@ public class SystemQuanxian implements Serializable{
     public int isqita;
     public int iswxpay;
     public int iszfbpay;
+    public int isvipcard;
 }

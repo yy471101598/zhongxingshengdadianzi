@@ -35,6 +35,7 @@ import com.shoppay.szvipnewzh.bean.VipInfo;
 import com.shoppay.szvipnewzh.bean.VipInfoMsg;
 import com.shoppay.szvipnewzh.bean.VipRecharge;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
+import com.shoppay.szvipnewzh.card.ReadCardOptTv;
 import com.shoppay.szvipnewzh.tools.ActivityStack;
 import com.shoppay.szvipnewzh.tools.BluetoothUtil;
 import com.shoppay.szvipnewzh.tools.CommonUtils;
@@ -43,6 +44,7 @@ import com.shoppay.szvipnewzh.tools.DayinUtils;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
 import com.shoppay.szvipnewzh.tools.NoDoubleClickListener;
+import com.shoppay.szvipnewzh.tools.NullUtils;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.ToastUtils;
 import com.shoppay.szvipnewzh.tools.UrlTools;
@@ -111,6 +113,9 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
     private String orderAccount;
     private SystemQuanxian sysquanxian;
     private MyApplication app;
+    private RelativeLayout rl_tvcard, rl_card;
+    private TextView tv_tvcard;
+    private boolean isVipcar = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -202,6 +207,9 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
     };
 
     private void ontainVipInfo() {
+        if (isVipcar) {
+            dialog.show();
+        }
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
@@ -214,6 +222,9 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 try {
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     LogUtils.d("xxVipinfoS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                     if (jso.getInt("flag") == 1) {
@@ -229,6 +240,9 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                         handler.sendMessage(msg);
                     }
                 } catch (Exception e) {
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     Message msg = handler.obtainMessage();
                     msg.what = 2;
                     handler.sendMessage(msg);
@@ -237,6 +251,9 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                if (isVipcar) {
+                    dialog.dismiss();
+                }
                 Message msg = handler.obtainMessage();
                 msg.what = 2;
                 handler.sendMessage(msg);
@@ -260,7 +277,18 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
         tv_title.setText("会员充值");
         rl_right = (RelativeLayout) findViewById(R.id.rl_right);
         rl_right.setOnClickListener(this);
-
+        rl_tvcard = findViewById(R.id.rl_tvcard);
+        tv_tvcard =findViewById(R.id.tv_tvcard);
+        rl_card =findViewById(R.id.rl_etcard);
+        if (Integer.parseInt(NullUtils.noNullHandle(sysquanxian.isvipcard).toString()) == 0) {
+            rl_tvcard.setVisibility(View.GONE);
+            rl_card.setVisibility(View.VISIBLE);
+            isVipcar = false;
+        } else {
+            rl_tvcard.setVisibility(View.VISIBLE);
+            rl_card.setVisibility(View.GONE);
+            isVipcar = true;
+        }
         rb_isYinlian = (RadioButton) findViewById(R.id.rb_yinlian);
         rb_money = (RadioButton) findViewById(R.id.rb_money);
         rb_zhifubao = (RadioButton) findViewById(R.id.rb_zhifubao);
@@ -330,7 +358,13 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
         switch (requestCode) {
             case 111:
                 if (resultCode == RESULT_OK) {
-                    et_vipcard.setText(data.getStringExtra("codedata"));
+                    if (isVipcar) {
+                        tv_tvcard.setText(data.getStringExtra("codedata"));
+                        editString = data.getStringExtra("codedata");
+                        ontainVipInfo();
+                    } else {
+                        et_vipcard.setText(data.getStringExtra("codedata"));
+                    }
                 }
                 break;
             case 222:
@@ -496,13 +530,22 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
     @Override
     protected void onResume() {
         super.onResume();
-        new ReadCardOpt(et_vipcard);
+        if (isVipcar) {
+            new ReadCardOptTv(tv_tvcard);
+            ontainVipInfo();
+        } else {
+            new ReadCardOpt(et_vipcard);
+        }
     }
 
     @Override
     protected void onStop() {
         try {
-            new ReadCardOpt().overReadCard();
+            if (isVipcar) {
+                new ReadCardOptTv().overReadCard();
+            } else {
+                new ReadCardOpt().overReadCard();
+            }
         } catch (RemoteException e) {
             e.printStackTrace();
         }

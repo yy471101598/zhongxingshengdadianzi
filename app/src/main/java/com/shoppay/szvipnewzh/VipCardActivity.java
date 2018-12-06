@@ -12,8 +12,6 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -32,6 +30,7 @@ import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.bean.VipInfo;
 import com.shoppay.szvipnewzh.bean.VipInfoMsg;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
+import com.shoppay.szvipnewzh.card.ReadCardOptTv;
 import com.shoppay.szvipnewzh.http.InterfaceBack;
 import com.shoppay.szvipnewzh.tools.ActivityStack;
 import com.shoppay.szvipnewzh.tools.BluetoothUtil;
@@ -41,6 +40,7 @@ import com.shoppay.szvipnewzh.tools.DayinUtils;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
 import com.shoppay.szvipnewzh.tools.NoDoubleClickListener;
+import com.shoppay.szvipnewzh.tools.NullUtils;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.ToastUtils;
 import com.shoppay.szvipnewzh.tools.UrlTools;
@@ -96,7 +96,9 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
     private SystemQuanxian sysquanxian;
     private RelativeLayout rl_cx, rl_clear;
     private String tjrmemId = "";
-
+    private RelativeLayout rl_tvcard, rl_card;
+    private TextView tv_tvcard;
+    private boolean isVipcar = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -223,6 +225,18 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
         rl_cx = findViewById(R.id.rl_tjr_cx);
         rl_clear = findViewById(R.id.rl_tjr_clear);
         tv_title.setText("会员办卡");
+        rl_tvcard = findViewById(R.id.rl_tvcard);
+        tv_tvcard = findViewById(R.id.tv_tvcard);
+        rl_card = findViewById(R.id.rl_etcard);
+        if (Integer.parseInt(NullUtils.noNullHandle(sysquanxian.isvipcard).toString()) == 0) {
+            rl_tvcard.setVisibility(View.GONE);
+            rl_card.setVisibility(View.VISIBLE);
+            isVipcar = false;
+        } else {
+            rl_tvcard.setVisibility(View.VISIBLE);
+            rl_card.setVisibility(View.GONE);
+            isVipcar = true;
+        }
         if (sysquanxian.ispassword == 1) {
             tv_passstate.setVisibility(View.VISIBLE);
             ispassword = true;
@@ -324,7 +338,12 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
         switch (requestCode) {
             case 111:
                 if (resultCode == RESULT_OK) {
-                    et_vipcard.setText(data.getStringExtra("codedata"));
+                    if (isVipcar) {
+                        tv_tvcard.setText(data.getStringExtra("codedata"));
+                        editString = data.getStringExtra("codedata");
+                    } else {
+                        et_vipcard.setText(data.getStringExtra("codedata"));
+                    }
                 }
                 break;
 
@@ -509,12 +528,21 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
     protected void onResume() {
         super.onResume();
         new ReadCardOpt(et_vipcard);
+        if (isVipcar) {
+            new ReadCardOptTv(tv_tvcard);
+        } else {
+            new ReadCardOpt(et_vipcard);
+        }
     }
 
     @Override
     protected void onStop() {
         try {
-            new ReadCardOpt().overReadCard();
+            if (isVipcar) {
+                new ReadCardOptTv().overReadCard();
+            } else {
+                new ReadCardOpt().overReadCard();
+            }
         } catch (RemoteException e) {
             e.printStackTrace();
         }

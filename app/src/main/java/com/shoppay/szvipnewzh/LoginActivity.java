@@ -354,6 +354,9 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                                 case "1.9":
                                     sysquanxian.iszfbpay = value;
                                     break;
+                                case "2.0":
+                                    sysquanxian.isvipcard = value;
+                                    break;
                             }
                         }
                         myApplication.setSystemQuanxian(sysquanxian);

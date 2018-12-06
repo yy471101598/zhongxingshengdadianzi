@@ -62,8 +62,9 @@
         >
 <include  layout="@layout/title_twoicon_back"></include>
     <RelativeLayout
+        android:id="@+id/rl_etcard"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="40.5dp"
         android:background="@color/white"
         >
         <TextView
@@ -91,12 +92,51 @@
             android:gravity="center_vertical|right"
             android:hint="请输入会员卡号"
             />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="@color/viewcolor"
+            android:layout_alignParentBottom="true"
+            ></View>
     </RelativeLayout>
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/viewcolor"></View>
-    <RelativeLayout
+        <RelativeLayout
+            android:id="@+id/rl_tvcard"
+            android:layout_width="match_parent"
+            android:layout_height="40.5dp"
+            android:background="@color/white"
+            android:visibility="gone"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="10dp"
+                android:text="会员卡号"
+                android:textColor="@color/text_30"
+                android:textSize="15sp"
+                />
+
+            <TextView
+                android:id="@+id/tv_tvcard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="10dp"
+                android:gravity="center_vertical|right"
+                android:textColor="@color/text_30"
+                android:textSize="15sp"
+                />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_alignParentBottom="true"
+                android:background="@color/viewcolor"></View>
+        </RelativeLayout>
+
+        <RelativeLayout
         android:id="@+id/num_rl_vipname"
         android:layout_width="match_parent"
         android:layout_height="41dp"
@@ -124,7 +164,7 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="0.5dp"
             android:layout_alignParentBottom="true"
             android:background="@color/viewcolor"></View>
     </RelativeLayout>
@@ -159,7 +199,7 @@
         </RelativeLayout>
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="0.5dp"
             android:background="@color/viewcolor"></View>
         <RelativeLayout
             android:layout_width="match_parent"
@@ -190,7 +230,7 @@
         </RelativeLayout>
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="0.5dp"
             android:background="@color/viewcolor"></View>
         <RelativeLayout
             android:layout_width="match_parent"
@@ -221,7 +261,7 @@
         </RelativeLayout>
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="0.5dp"
             android:background="@color/viewcolor"></View>
         <ListView
             android:id="@+id/num_listview"
@@ -229,7 +269,7 @@
             android:layout_height="match_parent"
             android:scrollbars="none"
             android:cacheColorHint="#00000000"
-            android:dividerHeight="1dp"
+            android:dividerHeight="0.5dp"
             android:divider="@color/viewcolor"
             android:visibility="gone"
             ></ListView>

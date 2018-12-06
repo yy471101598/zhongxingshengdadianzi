@@ -31,15 +31,18 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
+import com.shoppay.szvipnewzh.bean.SystemQuanxian;
 import com.shoppay.szvipnewzh.bean.VipInfo;
 import com.shoppay.szvipnewzh.bean.VipInfoMsg;
 import com.shoppay.szvipnewzh.card.ReadCardOpt;
+import com.shoppay.szvipnewzh.card.ReadCardOptTv;
 import com.shoppay.szvipnewzh.tools.ActivityStack;
 import com.shoppay.szvipnewzh.tools.BluetoothUtil;
 import com.shoppay.szvipnewzh.tools.DateUtils;
 import com.shoppay.szvipnewzh.tools.DayinUtils;
 import com.shoppay.szvipnewzh.tools.DialogUtil;
 import com.shoppay.szvipnewzh.tools.LogUtils;
+import com.shoppay.szvipnewzh.tools.NullUtils;
 import com.shoppay.szvipnewzh.tools.PreferenceHelper;
 import com.shoppay.szvipnewzh.tools.ToastUtils;
 import com.shoppay.szvipnewzh.tools.UrlTools;
@@ -92,6 +95,15 @@ public class JifenChangeActivity extends Activity {
     EditText vipEtJifennum;
     @Bind(R.id.vip_rl_jiesuan)
     RelativeLayout vipRlJiesuan;
+    @Bind(R.id.rl_tvcard)
+    RelativeLayout rl_tvcard;
+    @Bind(R.id.rl_etcard)
+    RelativeLayout rl_card;
+    @Bind(R.id.tv_tvcard)
+    TextView tv_tvcard;
+    private boolean isVipcar = false;
+    private SystemQuanxian sysquanxian;
+    private MyApplication app;
     private boolean isSuccess = false;
     private boolean isadd=true;
     private Activity ac;
@@ -135,6 +147,17 @@ public class JifenChangeActivity extends Activity {
         setContentView(R.layout.activity_jifenchange);
         ac = this;
         ButterKnife.bind(this);
+        app= (MyApplication) getApplication();
+        sysquanxian=app.getSysquanxian();
+        if (Integer.parseInt(NullUtils.noNullHandle(sysquanxian.isvipcard).toString()) == 0) {
+            rl_tvcard.setVisibility(View.GONE);
+            rl_card.setVisibility(View.VISIBLE);
+            isVipcar = false;
+        } else {
+            rl_tvcard.setVisibility(View.VISIBLE);
+            rl_card.setVisibility(View.GONE);
+            isVipcar = true;
+        }
         initView();
         dialog = DialogUtil.loadingDialog(ac, 1);
         PreferenceHelper.write(MyApplication.context, "shoppay", "viptoast", "未查询到会员");
@@ -219,6 +242,9 @@ public class JifenChangeActivity extends Activity {
     };
 
     private void ontainVipInfo() {
+        if (isVipcar) {
+            dialog.show();
+        }
         AsyncHttpClient client = new AsyncHttpClient();
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(this);
         client.setCookieStore(myCookieStore);
@@ -231,6 +257,9 @@ public class JifenChangeActivity extends Activity {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 try {
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     LogUtils.d("xxVipinfoS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                     if (jso.getInt("flag") == 1) {
@@ -246,6 +275,9 @@ public class JifenChangeActivity extends Activity {
                         handler.sendMessage(msg);
                     }
                 } catch (Exception e) {
+                    if (isVipcar) {
+                        dialog.dismiss();
+                    }
                     Message msg = handler.obtainMessage();
                     msg.what = 2;
                     handler.sendMessage(msg);
@@ -254,6 +286,9 @@ public class JifenChangeActivity extends Activity {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                if (isVipcar) {
+                    dialog.dismiss();
+                }
                 Message msg = handler.obtainMessage();
                 msg.what = 2;
                 handler.sendMessage(msg);
@@ -265,14 +300,23 @@ public class JifenChangeActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        new ReadCardOpt(vipEtCard);
+        if (isVipcar) {
+            new ReadCardOptTv(tv_tvcard);
+            ontainVipInfo();
+        } else {
+            new ReadCardOpt(vipEtCard);
+        }
     }
 
     @Override
     protected void onStop() {
         try
         {
-            new ReadCardOpt().overReadCard();
+            if (isVipcar) {
+                new ReadCardOptTv().overReadCard();
+            } else {
+                new ReadCardOpt().overReadCard();
+            }
         }
         catch (RemoteException e)
         {
@@ -404,7 +448,13 @@ public class JifenChangeActivity extends Activity {
         switch (requestCode) {
             case 111:
                 if (resultCode == RESULT_OK) {
-                    vipEtCard.setText(data.getStringExtra("codedata"));
+                    if (isVipcar) {
+                        tv_tvcard.setText(data.getStringExtra("codedata"));
+                        editString = data.getStringExtra("codedata");
+                        ontainVipInfo();
+                    } else {
+                        vipEtCard.setText(data.getStringExtra("codedata"));
+                    }
                 }
                 break;
 
