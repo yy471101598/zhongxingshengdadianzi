@@ -35,9 +35,12 @@ import com.shoppay.zxsddz.bean.JifenDk;
 import com.shoppay.zxsddz.bean.SystemQuanxian;
 import com.shoppay.zxsddz.bean.VipInfo;
 import com.shoppay.zxsddz.bean.VipInfoMsg;
+import com.shoppay.zxsddz.bean.YhqMsg;
 import com.shoppay.zxsddz.card.ReadCardOpt;
 import com.shoppay.zxsddz.card.ReadCardOptTv;
 import com.shoppay.zxsddz.http.InterfaceBack;
+import com.shoppay.zxsddz.modle.ImpObtainYhq;
+import com.shoppay.zxsddz.modle.InterfaceMVC;
 import com.shoppay.zxsddz.tools.ActivityStack;
 import com.shoppay.zxsddz.tools.BluetoothUtil;
 import com.shoppay.zxsddz.tools.CommonUtils;
@@ -62,7 +65,7 @@ import static com.shoppay.zxsddz.tools.DialogUtil.money;
  * Created by songxiaotao on 2017/7/1.
  */
 
-public class VipFragment extends Fragment  {
+public class VipFragment extends Fragment {
     private EditText et_card, et_xfmoney, et_zfmoney, et_yuemoney, et_jfmoney;
     private TextView tv_vipname, tv_vipjf, tv_zhmoney, tv_maxdk, tv_dkmoney, tv_obtainjf, tv_vipyue, tv_jiesuan, tv_vipdengji;
     private RelativeLayout rl_jiesuan;
@@ -75,17 +78,18 @@ public class VipFragment extends Fragment  {
     private RelativeLayout rl_password;
     private RadioButton rb_money, rb_wx, rb_zhifubao, rb_isYinlian, rb_yue, rb_qita;
     private EditText et_password;
-    private boolean isSuccess=false;
+    private boolean isSuccess = false;
     private RelativeLayout rl_tvcard, rl_card;
     private TextView tv_tvcard;
     private boolean isVipcar = false;
+    VipInfo info;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
-                    VipInfo info = (VipInfo) msg.obj;
+                    info = (VipInfo) msg.obj;
                     tv_vipname.setText(info.getMemName());
                     tv_vipyue.setText(info.getMemMoney());
                     tv_vipdengji.setText(info.getLevelName());
@@ -95,10 +99,10 @@ public class VipFragment extends Fragment  {
                     PreferenceHelper.write(getActivity(), "shoppay", "Discount", info.getDiscount());
                     PreferenceHelper.write(getActivity(), "shoppay", "DiscountPoint", info.getDiscountPoint());
                     PreferenceHelper.write(getActivity(), "shoppay", "jifen", info.getMemPoint());
-                    isSuccess=true;
+                    isSuccess = true;
                     break;
                 case 2:
-                    isSuccess=false;
+                    isSuccess = false;
                     tv_vipname.setText("");
                     tv_vipjf.setText("");
                     tv_vipyue.setText("");
@@ -109,11 +113,13 @@ public class VipFragment extends Fragment  {
                 case 3:
                     FastShopZhehMoney zh = (FastShopZhehMoney) msg.obj;
                     tv_zhmoney.setText(StringUtil.twoNum(zh.Money));
+                    tv_sfmoney.setText(StringUtil.twoNum(zh.Money));
                     et_zfmoney.setText(StringUtil.twoNum(zh.Money));
                     tv_obtainjf.setText(Integer.parseInt(zh.Point) + "");
                     break;
                 case 4:
                     tv_zhmoney.setText("0.00");
+                    tv_sfmoney.setText("0.00");
                     tv_obtainjf.setText("0");
                     break;
 
@@ -123,6 +129,11 @@ public class VipFragment extends Fragment  {
                     break;
                 case 6:
                     tv_maxdk.setText("");
+                    break;
+
+                case 8://优惠券成功
+                    break;
+                case 9://优惠券失败
                     break;
 
             }
@@ -136,13 +147,17 @@ public class VipFragment extends Fragment  {
     private MyApplication app;
     //    private Intent intent;
 //    private Dialog weixinDialog;
+    private RelativeLayout rl_yhqsao;
+    private EditText et_yhq;
+    private TextView tv_sfmoney;
+    private YhqMsg mYhqMsg;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_vipconsumption, null);
-        app= (MyApplication) getActivity().getApplication();
-        sysquanxian=app.getSysquanxian();
+        app = (MyApplication) getActivity().getApplication();
+        sysquanxian = app.getSysquanxian();
         initView(view);
         dialog = DialogUtil.loadingDialog(getActivity(), 1);
         paydialog = DialogUtil.payloadingDialog(getActivity(), 1);
@@ -273,6 +288,28 @@ public class VipFragment extends Fragment  {
                 handler.postDelayed(delayRun, 800);
             }
         });
+
+        et_yhq.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (yhqRun != null) {
+                    //每次editText有变化的时候，则移除上次发出的延迟线程
+                    handler.removeCallbacks(yhqRun);
+                }
+                //延迟800ms，如果不再输入字符，则执行该线程的run方法
+                handler.postDelayed(yhqRun, 800);
+            }
+        });
         et_xfmoney.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -288,6 +325,7 @@ public class VipFragment extends Fragment  {
             public void afterTextChanged(Editable editable) {
                 if (editable.toString().equals("")) {
                     tv_zhmoney.setText("0.00");
+                    tv_sfmoney.setText("0.00");
                     tv_obtainjf.setText("0.00");
                 } else {
                     if (!isSuccess) {
@@ -297,8 +335,9 @@ public class VipFragment extends Fragment  {
                         xfmoney = editable.toString();
                         String zhmoney = CommonUtils.multiply(CommonUtils.div(Double.parseDouble(PreferenceHelper.readString(getActivity(), "shoppay", "Discount", "0")), 100, 2) + "", xfmoney);
                         tv_zhmoney.setText(StringUtil.twoNum(zhmoney));
+                        tv_sfmoney.setText(StringUtil.twoNum(zhmoney));
                         et_zfmoney.setText(StringUtil.twoNum(zhmoney));
-                        tv_obtainjf.setText((int) CommonUtils.div(Double.parseDouble(zhmoney), Double.parseDouble(PreferenceHelper.readString(getActivity(), "shoppay", "DiscountPoint", "1")), 2)+"");
+                        tv_obtainjf.setText((int) CommonUtils.div(Double.parseDouble(zhmoney), Double.parseDouble(PreferenceHelper.readString(getActivity(), "shoppay", "DiscountPoint", "1")), 2) + "");
                     }
                 }
             }
@@ -351,16 +390,13 @@ public class VipFragment extends Fragment  {
     @Override
     public void onStop() {
         //终止检卡
-        try
-        {
+        try {
             if (isVipcar) {
                 new ReadCardOptTv().overReadCard();
             } else {
                 new ReadCardOpt().overReadCard();
             }
-        }
-        catch (RemoteException e)
-        {
+        } catch (RemoteException e) {
             e.printStackTrace();
         }
         super.onStop();
@@ -368,6 +404,10 @@ public class VipFragment extends Fragment  {
         if (delayRun != null) {
             //每次editText有变化的时候，则移除上次发出的延迟线程
             handler.removeCallbacks(delayRun);
+        }
+        if (yhqRun != null) {
+            //每次editText有变化的时候，则移除上次发出的延迟线程
+            handler.removeCallbacks(yhqRun);
         }
     }
 
@@ -383,6 +423,37 @@ public class VipFragment extends Fragment  {
         }
     };
 
+    /**
+     * 延迟线程，看是否还有下一个字符输入
+     */
+    private Runnable yhqRun = new Runnable() {
+
+        @Override
+        public void run() {
+            //在这里调用服务器的接口，获取数据
+            obtainYhq();
+        }
+    };
+
+    private void obtainYhq() {
+        ImpObtainYhq yhq = new ImpObtainYhq();
+        yhq.obtainYhq(getActivity(), info.getMemID(), et_yhq.getText().toString(), tv_zhmoney.getText().toString(), new InterfaceMVC() {
+            @Override
+            public void onResponse(int code, Object response) {
+                Message msg = handler.obtainMessage();
+                msg.what = 8;
+                msg.obj = response;
+                handler.sendMessage(msg);
+            }
+
+            @Override
+            public void onErrorResponse(int code, Object msg1) {
+                Message msg = handler.obtainMessage();
+                msg.what = 9;
+                handler.sendMessage(msg);
+            }
+        });
+    }
 
     private void obtainVipInfo() {
         if (isVipcar) {
@@ -458,6 +529,10 @@ public class VipFragment extends Fragment  {
         tv_obtainjf = (TextView) view.findViewById(R.id.vip_tv_hasjf);
 
 
+        rl_yhqsao = view.findViewById(R.id.rl_yhqsao);
+        et_yhq = view.findViewById(R.id.vip_et_yhq);
+        tv_sfmoney = view.findViewById(R.id.vip_tv_sfmoney);
+
         rb_isYinlian = (RadioButton) view.findViewById(R.id.rb_yinlian);
         rb_money = (RadioButton) view.findViewById(R.id.rb_money);
         rb_zhifubao = (RadioButton) view.findViewById(R.id.rb_zhifubao);
@@ -521,42 +596,42 @@ public class VipFragment extends Fragment  {
                         if (Double.parseDouble(tv_zhmoney.getText().toString()) - money > 0) {
                             Toast.makeText(MyApplication.context, "少于折后金额，请检查输入信息",
                                     Toast.LENGTH_SHORT).show();
-                        } else if(Double.parseDouble(tv_zhmoney.getText().toString()) - money <0){
+                        } else if (Double.parseDouble(tv_zhmoney.getText().toString()) - money < 0) {
                             Toast.makeText(MyApplication.context, "大于折后金额，请检查输入信息",
                                     Toast.LENGTH_SHORT).show();
-                        }else {
+                        } else {
 
                             if (isYue && sysquanxian.ispassword == 1) {
-                                    DialogUtil.pwdDialog(getActivity(), 1, new InterfaceBack() {
-                                        @Override
-                                        public void onResponse(Object response) {
-                                            password = (String) response;
-                                            jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
-                                        }
+                                DialogUtil.pwdDialog(getActivity(), 1, new InterfaceBack() {
+                                    @Override
+                                    public void onResponse(Object response) {
+                                        password = (String) response;
+                                        jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                    }
 
-                                        @Override
-                                        public void onErrorResponse(Object msg) {
+                                    @Override
+                                    public void onErrorResponse(Object msg) {
 
-                                        }
-                                    });
+                                    }
+                                });
                             } else {
-                                if(isWx){
-                                    if(sysquanxian.iswxpay==0){
+                                if (isWx) {
+                                    if (sysquanxian.iswxpay == 0) {
                                         Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
-                                        mipca.putExtra("type","pay");
+                                        mipca.putExtra("type", "pay");
                                         startActivityForResult(mipca, 222);
-                                    }else {
+                                    } else {
                                         jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                     }
-                                }else if(isZhifubao){
-                                    if(sysquanxian.iszfbpay==0){
+                                } else if (isZhifubao) {
+                                    if (sysquanxian.iszfbpay == 0) {
                                         Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
-                                        mipca.putExtra("type","pay");
+                                        mipca.putExtra("type", "pay");
                                         startActivityForResult(mipca, 222);
-                                    }else {
+                                    } else {
                                         jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                     }
-                                }else {
+                                } else {
                                     jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
 
@@ -573,7 +648,6 @@ public class VipFragment extends Fragment  {
     }
 
 
-
     private void jiesuan(String orderNum) {
         dialog.show();
         AsyncHttpClient client = new AsyncHttpClient();
@@ -583,7 +657,7 @@ public class VipFragment extends Fragment  {
         params.put("MemID", PreferenceHelper.readString(MyApplication.context, "shoppay", "memid", "123"));
         params.put("OrderAccount", orderNum);
 //        (订单折后总金额/标记B)取整
-        params.put("OrderPoint", (int) CommonUtils.div(Double.parseDouble(tv_zhmoney.getText().toString()), Double.parseDouble(PreferenceHelper.readString(getActivity(), "shoppay", "DiscountPoint", "1")),2));
+        params.put("OrderPoint", (int) CommonUtils.div(Double.parseDouble(tv_zhmoney.getText().toString()), Double.parseDouble(PreferenceHelper.readString(getActivity(), "shoppay", "DiscountPoint", "1")), 2));
         params.put("TotalMoney", et_xfmoney.getText().toString());
         params.put("DiscountMoney", tv_zhmoney.getText().toString());
 //        0=现金 1=银联 2=微信 3=支付宝 4=其他支付 5=余额(散客禁用)
@@ -604,7 +678,7 @@ public class VipFragment extends Fragment  {
         LogUtils.d("xxparams", params.toString());
         String url = UrlTools.obtainUrl(getActivity(), "?Source=3", "QuickExpense");
         LogUtils.d("xxurl", url);
-        client.setTimeout(120*1000);
+        client.setTimeout(120 * 1000);
         client.post(url, params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -688,12 +762,12 @@ public class VipFragment extends Fragment  {
         final PersistentCookieStore myCookieStore = new PersistentCookieStore(getActivity());
         client.setCookieStore(myCookieStore);
         RequestParams map = new RequestParams();
-        map.put("auth_code",codedata);
-        map.put("UserID", PreferenceHelper.readString(getActivity(), "shoppay", "UserID",""));
+        map.put("auth_code", codedata);
+        map.put("UserID", PreferenceHelper.readString(getActivity(), "shoppay", "UserID", ""));
 //        （1会员充值7商品消费9快速消费11会员充次）
-        map.put("ordertype",9);
-        orderAccount=DateUtils.getCurrentTime("yyyyMMddHHmmss");
-        map.put("account",orderAccount );
+        map.put("ordertype", 9);
+        orderAccount = DateUtils.getCurrentTime("yyyyMMddHHmmss");
+        map.put("account", orderAccount);
         map.put("money", tv_zhmoney.getText().toString());
 //        0=现金 1=银联 2=微信 3=支付宝
         if (isMoney) {
@@ -705,7 +779,7 @@ public class VipFragment extends Fragment  {
         } else {
             map.put("payType", 3);
         }
-        client.setTimeout(120*1000);
+        client.setTimeout(120 * 1000);
         LogUtils.d("xxparams", map.toString());
         String url = UrlTools.obtainUrl(getActivity(), "?Source=3", "PayOnLine");
         LogUtils.d("xxurl", url);

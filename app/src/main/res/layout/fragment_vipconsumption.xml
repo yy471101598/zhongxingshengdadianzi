@@ -315,6 +315,100 @@
                 >
 
                 <TextView
+                    android:id="@+id/vip_tv_yhmoney"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="10dp"
+                    android:text="优惠券号"
+                    android:textColor="@color/text_30"
+                    android:textSize="15sp"
+                    />
+
+                <RelativeLayout
+                    android:id="@+id/rl_yhqsao"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:background="@color/theme_red"
+                    >
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:paddingLeft="7dp"
+                        android:paddingTop="3dp"
+                        android:paddingRight="7dp"
+                        android:paddingBottom="3dp"
+                        android:text="扫描"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"/>
+                </RelativeLayout>
+
+                <EditText
+                    android:id="@+id/vip_et_yhq"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:layout_toLeftOf="@id/rl_yhqsao"
+                    android:layout_toRightOf="@id/vip_tv_yhmoney"
+                    android:background="@null"
+                    android:gravity="center_vertical|right"
+                    android:hint="请输入或扫描优惠券号"
+                    android:textColor="@color/theme_red"
+                    android:textColorHint="@color/theme_red"
+                    android:textSize="15sp"
+                    />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/viewcolor"></View>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@color/white"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="10dp"
+                    android:text="实付金额"
+                    android:textColor="@color/text_30"
+                    android:textSize="15sp"
+                    />
+
+                <TextView
+                    android:id="@+id/vip_tv_sfmoney"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:text="0.00"
+                    android:textColor="@color/text_30"
+                    android:textSize="15sp"
+                    />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/viewcolor"></View>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@color/white"
+                >
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"

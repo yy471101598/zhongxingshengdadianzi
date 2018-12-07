@@ -130,6 +130,7 @@ public class NumRechargeActivity extends Activity implements
         }
     };
     private Intent intent;
+    private Intent yhqintent;
     private MsgReceiver msgReceiver;
     private Dialog weixinDialog;
     private VipPayMsg vipPayMsg;
@@ -159,6 +160,7 @@ public class NumRechargeActivity extends Activity implements
         PreferenceHelper.write(MyApplication.context, "shoppay", "viptoast", "未查询到会员");
         dbAdapter.deleteShopCar();
         initView();
+        yhqintent = new Intent("com.shoppay.wy.numyhqsaomiao");
         obtainServeceShop();
 
         // 注册广播
@@ -340,7 +342,7 @@ public class NumRechargeActivity extends Activity implements
         rl_left = (RelativeLayout) findViewById(R.id.rl_left);
         rl_jiesuan = (RelativeLayout) findViewById(R.id.numrecharge_rl_jiesan);
         tv_tvcard = findViewById(R.id.tv_tvcard);
-        rl_tvcard=findViewById(R.id.rl_tvcard);
+        rl_tvcard = findViewById(R.id.rl_tvcard);
         rl_card = findViewById(R.id.numrecharge_rl_card);
         tv_jifen = (TextView) findViewById(R.id.numrecharge_tv_jifen);
         tv_vipjifen = (TextView) findViewById(R.id.numrecharge_tv_vipjifen);
@@ -437,6 +439,11 @@ public class NumRechargeActivity extends Activity implements
                 if (resultCode == RESULT_OK) {
                     pay(data.getStringExtra("codedata"));
                 }
+                break;
+
+            case 000:
+                yhqintent.putExtra("code", data.getStringExtra("codedata"));
+                sendBroadcast(yhqintent);
                 break;
         }
     }

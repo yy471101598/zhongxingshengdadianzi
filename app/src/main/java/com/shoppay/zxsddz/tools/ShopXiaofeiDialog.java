@@ -43,8 +43,8 @@ public class ShopXiaofeiDialog {
     public static boolean isMoney = true, isYue = false, isZhifubao = false, isYinlian = false, isQita = false, isWx = false;
     public static Dialog dialog;
 
-    public static Dialog jiesuanDialog(MyApplication app,final  boolean isVip,final Dialog loading,final Context context,
-                                       int showingLocation, final String type,final double yfmoney, final InterfaceBack handler) {
+    public static Dialog jiesuanDialog(MyApplication app, final boolean isVip, final Dialog loading, final Context context,
+                                       int showingLocation, final String type, final double yfmoney, final InterfaceBack handler) {
         final Dialog dialog;
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.dialog_shoppay, null);
@@ -55,39 +55,47 @@ public class ShopXiaofeiDialog {
         final RelativeLayout rl_jiesuan = (RelativeLayout) view.findViewById(R.id.shoppay_rl_jiesuan);
         final RelativeLayout rl_password = (RelativeLayout) view.findViewById(R.id.vip_rl_password);
         final RadioGroup mRadiogroup = (RadioGroup) view.findViewById(R.id.radiogroup);
-        final SystemQuanxian sysquanxian=app.getSysquanxian();
-       RadioButton rb_isYinlian= (RadioButton) view.findViewById(R.id.rb_yinlian);
-        RadioButton rb_money= (RadioButton) view.findViewById(R.id.rb_money);
-        RadioButton rb_zhifubao= (RadioButton)view. findViewById(R.id.rb_zhifubao);
-        RadioButton rb_wx= (RadioButton)view. findViewById(R.id.rb_wx);
-        RadioButton rb_yue= (RadioButton)view. findViewById(R.id.rb_yue);
-        RadioButton rb_qita= (RadioButton)view. findViewById(R.id.rb_qita);
-        if(sysquanxian.isweixin==0){
+        final SystemQuanxian sysquanxian = app.getSysquanxian();
+        RadioButton rb_isYinlian = (RadioButton) view.findViewById(R.id.rb_yinlian);
+        RadioButton rb_money = (RadioButton) view.findViewById(R.id.rb_money);
+        RadioButton rb_zhifubao = (RadioButton) view.findViewById(R.id.rb_zhifubao);
+        RadioButton rb_wx = (RadioButton) view.findViewById(R.id.rb_wx);
+        RadioButton rb_yue = (RadioButton) view.findViewById(R.id.rb_yue);
+        RadioButton rb_qita = (RadioButton) view.findViewById(R.id.rb_qita);
+        LinearLayout li_yhq = view.findViewById(R.id.li_yhq);
+        RelativeLayout rl_yhqsao = view.findViewById(R.id.rl_yhqsao);
+        EditText et_yhq = view.findViewById(R.id.vip_et_yhq);
+        TextView tv_sfmoney = view.findViewById(R.id.vip_tv_sfmoney);
+        if(!isVip){
+            li_yhq.setVisibility(View.GONE);
+        }
+
+        if (sysquanxian.isweixin == 0) {
             rb_wx.setVisibility(View.GONE);
         }
-        if(sysquanxian.iszhifubao==0){
+        if (sysquanxian.iszhifubao == 0) {
             rb_zhifubao.setVisibility(View.GONE);
         }
-        if(sysquanxian.isyinlian==0){
+        if (sysquanxian.isyinlian == 0) {
             rb_isYinlian.setVisibility(View.GONE);
         }
-        if(sysquanxian.isxianjin==0){
+        if (sysquanxian.isxianjin == 0) {
             rb_money.setVisibility(View.GONE);
         }
-        if(sysquanxian.isqita==0){
+        if (sysquanxian.isqita == 0) {
             rb_qita.setVisibility(View.GONE);
         }
-        if(sysquanxian.isyue==0){
+        if (sysquanxian.isyue == 0) {
             rb_yue.setVisibility(View.GONE);
         }
-        if(isVip){
+        if (isVip) {
             isMoney = false;
             isYue = true;
             isYinlian = false;
             isWx = false;
             isZhifubao = false;
             isQita = false;
-        }else {
+        } else {
             isMoney = true;
             isYue = false;
             rb_yue.setVisibility(View.GONE);
@@ -174,15 +182,15 @@ public class ShopXiaofeiDialog {
                     } else if (Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(et_zfmoney.getText().toString()) > 0) {
                         Toast.makeText(context, "少于应付金额，请检查输入信息",
                                 Toast.LENGTH_SHORT).show();
-                    }  else if(isYue&&Double.parseDouble(tv_yfmoney.getText().toString())-Double.parseDouble(  PreferenceHelper.readString(context, "shoppay", "MemMoney","0"))>0){
+                    } else if (isYue && Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(PreferenceHelper.readString(context, "shoppay", "MemMoney", "0")) > 0) {
                         Toast.makeText(MyApplication.context, "余额不足",
                                 Toast.LENGTH_SHORT).show();
-                    }else {
-                        if (isYue&&sysquanxian.ispassword==1) {
-                            DialogUtil.pwdDialog( context, 1, new InterfaceBack() {
+                    } else {
+                        if (isYue && sysquanxian.ispassword == 1) {
+                            DialogUtil.pwdDialog(context, 1, new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
-                                        jiesuan(loading, type, handler, dialog, context, response.toString(),DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                    jiesuan(loading, type, handler, dialog, context, response.toString(), DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
 
                                 @Override
@@ -192,22 +200,22 @@ public class ShopXiaofeiDialog {
                             });
                         } else {
 
-                            if(isWx){
-                                if(sysquanxian.iswxpay==0){
-                                   handler.onResponse("wxpay");
+                            if (isWx) {
+                                if (sysquanxian.iswxpay == 0) {
+                                    handler.onResponse("wxpay");
                                     dialog.dismiss();
-                                }else {
-                                    jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                } else {
+                                    jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
-                            }else if(isZhifubao){
-                                if(sysquanxian.iszfbpay==0){
+                            } else if (isZhifubao) {
+                                if (sysquanxian.iszfbpay == 0) {
                                     handler.onResponse("zfbpay");
                                     dialog.dismiss();
-                                }else {
-                                    jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                } else {
+                                    jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
-                            }else {
-                                jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                            } else {
+                                jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                             }
 
                         }
@@ -249,12 +257,12 @@ public class ShopXiaofeiDialog {
     public static int dip2px(Context context, float dipValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dipValue * scale + 0.5f);
-  }
+    }
 
 
-    public static void jiesuan(final  Dialog loading, final String type, final InterfaceBack handle, final Dialog dialog, final Context context, final String pwd,String orderNum) {
-       loading.show();
-        if(type.equals("num")) {
+    public static void jiesuan(final Dialog loading, final String type, final InterfaceBack handle, final Dialog dialog, final Context context, final String pwd, String orderNum) {
+        loading.show();
+        if (type.equals("num")) {
             AsyncHttpClient client = new AsyncHttpClient();
             final PersistentCookieStore myCookieStore = new PersistentCookieStore(context);
             client.setCookieStore(myCookieStore);
@@ -275,7 +283,7 @@ public class ShopXiaofeiDialog {
             }
             RequestParams params = new RequestParams();
             params.put("MemID", PreferenceHelper.readString(context, "shoppay", "memid", ""));
-            params.put("OrderAccount",orderNum);
+            params.put("OrderAccount", orderNum);
             params.put("TotalMoney", yfmoney);
             params.put("DiscountMoney", zfmoney);
             params.put("OrderPoint", "");
@@ -299,7 +307,7 @@ public class ShopXiaofeiDialog {
                 params.put("Glist[" + i + "][GoodsID]", shoplist.get(i).goodsid);
                 params.put("Glist[" + i + "][number]", shoplist.get(i).count);
                 params.put("Glist[" + i + "][GoodsPoint]", "");
-                params.put("Glist[" + i + "][goodstype]",shoplist.get(i).goodsType);
+                params.put("Glist[" + i + "][goodstype]", shoplist.get(i).goodsType);
                 params.put("Glist[" + i + "][Price]", shoplist.get(i).discountmoney);
                 params.put("Glist[" + i + "][GoodsPrice]", shoplist.get(i).price);
             }
@@ -332,7 +340,7 @@ public class ShopXiaofeiDialog {
                                     handle.onResponse("");
                                 }
                             }
-                        }else{
+                        } else {
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
@@ -348,7 +356,7 @@ public class ShopXiaofeiDialog {
                             Toast.LENGTH_SHORT).show();
                 }
             });
-        }else{
+        } else {
             AsyncHttpClient client = new AsyncHttpClient();
             final PersistentCookieStore myCookieStore = new PersistentCookieStore(context);
             client.setCookieStore(myCookieStore);
@@ -357,7 +365,7 @@ public class ShopXiaofeiDialog {
             List<ShopCar> shoplist = new ArrayList<>();
             double yfmoney = 0.0;
             double zfmoney = 0.0;
-            int point=0;
+            int point = 0;
             int num = 0;
             for (ShopCar numShop : list) {
                 if (numShop.count == 0) {
@@ -366,7 +374,7 @@ public class ShopXiaofeiDialog {
                     zfmoney = CommonUtils.add(zfmoney, Double.parseDouble(numShop.discountmoney));
                     yfmoney = CommonUtils.add(yfmoney, Double.parseDouble(CommonUtils.multiply(numShop.count + "", numShop.price)));
                     num = num + numShop.count;
-                    point=point+(int)numShop.point;
+                    point = point + (int) numShop.point;
                 }
             }
             RequestParams params = new RequestParams();
@@ -390,9 +398,9 @@ public class ShopXiaofeiDialog {
             }
             params.put("UserPwd", pwd);
             params.put("GlistCount", shoplist.size());
-            LogUtils.d("xxparams",shoplist.size()+"");
+            LogUtils.d("xxparams", shoplist.size() + "");
             for (int i = 0; i < shoplist.size(); i++) {
-                LogUtils.d("xxparams",shoplist.get(i).discount);
+                LogUtils.d("xxparams", shoplist.get(i).discount);
                 params.put("Glist[" + i + "][GoodsID]", shoplist.get(i).goodsid);
                 params.put("Glist[" + i + "][number]", shoplist.get(i).count);
                 params.put("Glist[" + i + "][GoodsPoint]", point);
@@ -428,7 +436,7 @@ public class ShopXiaofeiDialog {
                                     handle.onResponse("");
                                 }
                             }
-                        }else{
+                        } else {
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {

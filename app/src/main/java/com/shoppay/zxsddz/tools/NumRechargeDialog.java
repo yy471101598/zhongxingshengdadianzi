@@ -1,8 +1,16 @@
 package com.shoppay.zxsddz.tools;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Handler;
+import android.os.Message;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -27,6 +35,9 @@ import com.shoppay.zxsddz.bean.ShopCar;
 import com.shoppay.zxsddz.bean.SystemQuanxian;
 import com.shoppay.zxsddz.db.DBAdapter;
 import com.shoppay.zxsddz.http.InterfaceBack;
+import com.shoppay.zxsddz.modle.ImpObtainYhq;
+import com.shoppay.zxsddz.modle.InterfaceMVC;
+import com.shoppay.zxsddz.wxcode.MipcaActivityCapture;
 
 import org.json.JSONObject;
 
@@ -40,10 +51,28 @@ import cz.msebera.android.httpclient.Header;
  */
 
 public class NumRechargeDialog {
+    public static Handler yhhandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 1:
+                    break;
+                case 2:
+                    break;
+            }
+        }
+    };
     public static boolean isMoney = true, isYue = false, isZhifubao = false, isYinlian = false, isQita = false, isWx = false;
     public static Dialog dialog;
-    public static Dialog jiesuanDialog(MyApplication app,final Dialog loading,final Context context,
-                                       int showingLocation, final String type,final double yfmoney, final InterfaceBack handler) {
+    public static EditText et_yhq;
+    public static MsgReceiver msgReceiver;
+    public static double yfmoney;
+    public static String memid;
+    public static Activity ac;
+
+    public static Dialog jiesuanDialog(MyApplication app, final Dialog loading, final Activity context,
+                                       int showingLocation, final String type, final double yfmoney, final InterfaceBack handler) {
         final Dialog dialog;
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.dialog_numpay, null);
@@ -54,30 +83,71 @@ public class NumRechargeDialog {
         final RelativeLayout rl_jiesuan = (RelativeLayout) view.findViewById(R.id.shoppay_rl_jiesuan);
         final RelativeLayout rl_password = (RelativeLayout) view.findViewById(R.id.vip_rl_password);
         final RadioGroup mRadiogroup = (RadioGroup) view.findViewById(R.id.radiogroup);
-        final SystemQuanxian sysquanxian=app.getSysquanxian();
-       RadioButton rb_isYinlian= (RadioButton) view.findViewById(R.id.rb_yinlian);
-        RadioButton rb_money= (RadioButton) view.findViewById(R.id.rb_money);
-        RadioButton rb_zhifubao= (RadioButton)view. findViewById(R.id.rb_zhifubao);
-        RadioButton rb_wx= (RadioButton)view. findViewById(R.id.rb_wx);
-        RadioButton rb_yue= (RadioButton)view. findViewById(R.id.rb_yue);
-        RadioButton rb_qita= (RadioButton)view. findViewById(R.id.rb_qita);
+        final SystemQuanxian sysquanxian = app.getSysquanxian();
 
-        if(sysquanxian.isweixin==0){
+        LinearLayout li_yhq = view.findViewById(R.id.li_yhq);
+        RelativeLayout rl_yhqsao = view.findViewById(R.id.rl_yhqsao);
+        et_yhq = view.findViewById(R.id.vip_et_yhq);
+        TextView tv_sfmoney = view.findViewById(R.id.vip_tv_sfmoney);
+
+        rl_yhqsao.setOnClickListener(new NoDoubleClickListener() {
+            @Override
+            protected void onNoDoubleClick(View view) {
+                Intent mipca = new Intent(context, MipcaActivityCapture.class);
+                context.startActivityForResult(mipca, 000);
+            }
+        });
+
+        RadioButton rb_isYinlian = (RadioButton) view.findViewById(R.id.rb_yinlian);
+        RadioButton rb_money = (RadioButton) view.findViewById(R.id.rb_money);
+        RadioButton rb_zhifubao = (RadioButton) view.findViewById(R.id.rb_zhifubao);
+        RadioButton rb_wx = (RadioButton) view.findViewById(R.id.rb_wx);
+        RadioButton rb_yue = (RadioButton) view.findViewById(R.id.rb_yue);
+        RadioButton rb_qita = (RadioButton) view.findViewById(R.id.rb_qita);
+// 注册广播
+        msgReceiver = new MsgReceiver();
+        IntentFilter iiiff = new IntentFilter();
+        iiiff.addAction("com.shoppay.wy.fastsaomiao");
+        context.registerReceiver(msgReceiver, iiiff);
+
+
+        et_yhq.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (yhqRun != null) {
+                    //每次editText有变化的时候，则移除上次发出的延迟线程
+                    yhhandler.removeCallbacks(yhqRun);
+                }
+                //延迟800ms，如果不再输入字符，则执行该线程的run方法
+                yhhandler.postDelayed(yhqRun, 800);
+            }
+        });
+        if (sysquanxian.isweixin == 0) {
             rb_wx.setVisibility(View.GONE);
         }
-        if(sysquanxian.iszhifubao==0){
+        if (sysquanxian.iszhifubao == 0) {
             rb_zhifubao.setVisibility(View.GONE);
         }
-        if(sysquanxian.isyinlian==0){
+        if (sysquanxian.isyinlian == 0) {
             rb_isYinlian.setVisibility(View.GONE);
         }
-        if(sysquanxian.isxianjin==0){
+        if (sysquanxian.isxianjin == 0) {
             rb_money.setVisibility(View.GONE);
         }
-        if(sysquanxian.isqita==0){
+        if (sysquanxian.isqita == 0) {
             rb_qita.setVisibility(View.GONE);
         }
-        if(sysquanxian.isyue==0){
+        if (sysquanxian.isyue == 0) {
             rb_yue.setVisibility(View.GONE);
         }
         isMoney = true;
@@ -162,15 +232,15 @@ public class NumRechargeDialog {
                     } else if (Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(et_zfmoney.getText().toString()) > 0) {
                         Toast.makeText(context, "少于应付金额，请检查输入信息",
                                 Toast.LENGTH_SHORT).show();
-                    }   else if(isYue&&Double.parseDouble(tv_yfmoney.getText().toString())-Double.parseDouble(  PreferenceHelper.readString(context, "shoppay", "MemMoney","0"))>0){
+                    } else if (isYue && Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(PreferenceHelper.readString(context, "shoppay", "MemMoney", "0")) > 0) {
                         Toast.makeText(MyApplication.context, "余额不足",
                                 Toast.LENGTH_SHORT).show();
-                    }else {
-                        if (isYue&&sysquanxian.ispassword==1) {
-                            DialogUtil.pwdDialog( context, 1, new InterfaceBack() {
+                    } else {
+                        if (isYue && sysquanxian.ispassword == 1) {
+                            DialogUtil.pwdDialog(context, 1, new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
-                                        jiesuan(loading, type, handler, dialog, context, response.toString(),DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                    jiesuan(loading, type, handler, dialog, context, response.toString(), DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
 
                                 @Override
@@ -179,22 +249,22 @@ public class NumRechargeDialog {
                                 }
                             });
                         } else {
-                            if(isWx){
-                                if(sysquanxian.iswxpay==0){
+                            if (isWx) {
+                                if (sysquanxian.iswxpay == 0) {
                                     handler.onResponse("wxpay");
                                     dialog.dismiss();
-                                }else {
-                                    jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                } else {
+                                    jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
-                            }else if(isZhifubao){
-                                if(sysquanxian.iszfbpay==0){
+                            } else if (isZhifubao) {
+                                if (sysquanxian.iszfbpay == 0) {
                                     handler.onResponse("zfbpay");
                                     dialog.dismiss();
-                                }else {
-                                    jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                } else {
+                                    jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
-                            }else {
-                                jiesuan(loading, type, handler, dialog, context,"",DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                            } else {
+                                jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                             }
                         }
                     }
@@ -236,12 +306,12 @@ public class NumRechargeDialog {
     public static int dip2px(Context context, float dipValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dipValue * scale + 0.5f);
-  }
+    }
 
 
-    public static void jiesuan(final  Dialog loading,String type,final InterfaceBack handle, final Dialog dialog, final Context context, final String pwd,final String orderNum) {
-       loading.show();
-        if(type.equals("num")) {
+    public static void jiesuan(final Dialog loading, String type, final InterfaceBack handle, final Dialog dialog, final Context context, final String pwd, final String orderNum) {
+        loading.show();
+        if (type.equals("num")) {
             AsyncHttpClient client = new AsyncHttpClient();
             final PersistentCookieStore myCookieStore = new PersistentCookieStore(context);
             client.setCookieStore(myCookieStore);
@@ -318,7 +388,7 @@ public class NumRechargeDialog {
                                     handle.onResponse("");
                                 }
                             }
-                        }else{
+                        } else {
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
@@ -334,7 +404,7 @@ public class NumRechargeDialog {
                             Toast.LENGTH_SHORT).show();
                 }
             });
-        }else{
+        } else {
             AsyncHttpClient client = new AsyncHttpClient();
             final PersistentCookieStore myCookieStore = new PersistentCookieStore(context);
             client.setCookieStore(myCookieStore);
@@ -343,7 +413,7 @@ public class NumRechargeDialog {
             List<ShopCar> shoplist = new ArrayList<>();
             double yfmoney = 0.0;
             double zfmoney = 0.0;
-            int point=0;
+            int point = 0;
             int num = 0;
             for (ShopCar numShop : list) {
                 if (numShop.count == 0) {
@@ -352,7 +422,7 @@ public class NumRechargeDialog {
                     zfmoney = CommonUtils.add(zfmoney, Double.parseDouble(numShop.discountmoney));
                     yfmoney = CommonUtils.add(yfmoney, Double.parseDouble(CommonUtils.multiply(numShop.count + "", numShop.price)));
                     num = num + numShop.count;
-                    point=point+(int)numShop.point;
+                    point = point + (int) numShop.point;
                 }
             }
             RequestParams params = new RequestParams();
@@ -376,9 +446,9 @@ public class NumRechargeDialog {
             }
             params.put("UserPwd", pwd);
             params.put("GlistCount", shoplist.size());
-            LogUtils.d("xxparams",shoplist.size()+"");
+            LogUtils.d("xxparams", shoplist.size() + "");
             for (int i = 0; i < shoplist.size(); i++) {
-                LogUtils.d("xxparams",shoplist.get(i).discount);
+                LogUtils.d("xxparams", shoplist.get(i).discount);
                 params.put("Glist[" + i + "][GoodsID]", shoplist.get(i).goodsid);
                 params.put("Glist[" + i + "][number]", shoplist.get(i).count);
                 params.put("Glist[" + i + "][GoodsPoint]", point);
@@ -414,7 +484,7 @@ public class NumRechargeDialog {
                                     handle.onResponse("");
                                 }
                             }
-                        }else{
+                        } else {
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
@@ -432,5 +502,54 @@ public class NumRechargeDialog {
             });
 
         }
+    }
+
+    /**
+     * 广播接收器
+     *
+     * @author len
+     */
+    public static class MsgReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //拿到进度，更新UI
+            String code = intent.getStringExtra("code");
+            et_yhq.setText(code);
+
+        }
+
+    }
+
+    /**
+     * 延迟线程，看是否还有下一个字符输入
+     */
+    public static Runnable yhqRun = new Runnable() {
+
+        @Override
+        public void run() {
+            //在这里调用服务器的接口，获取数据
+            obtainYhq();
+        }
+    };
+
+    public static void obtainYhq() {
+        ImpObtainYhq yhq = new ImpObtainYhq();
+        yhq.obtainYhq(ac, memid, et_yhq.getText().toString(), yfmoney + "", new InterfaceMVC() {
+            @Override
+            public void onResponse(int code, Object response) {
+                Message msg = yhhandler.obtainMessage();
+                msg.what = 8;
+                msg.obj = response;
+                yhhandler.sendMessage(msg);
+            }
+
+            @Override
+            public void onErrorResponse(int code, Object msg1) {
+                Message msg = yhhandler.obtainMessage();
+                msg.what = 9;
+                yhhandler.sendMessage(msg);
+            }
+        });
     }
 }
