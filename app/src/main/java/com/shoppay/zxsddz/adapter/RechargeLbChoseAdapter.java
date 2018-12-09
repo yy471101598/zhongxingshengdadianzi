@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.shoppay.zxsddz.R;
 import com.shoppay.zxsddz.bean.RechargeLb;
+import com.shoppay.zxsddz.tools.StringUtil;
 
 import java.util.List;
 
@@ -62,7 +63,7 @@ public class RechargeLbChoseAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
         RechargeLb item = items.get(position);
-        holder.tv_car.setText(item.RechargeMoney);
+        holder.tv_car.setText(StringUtil.twoNum(item.RechargeMoney));
         return convertView;
     }
 

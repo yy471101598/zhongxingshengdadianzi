@@ -31,8 +31,10 @@ import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
 import com.shoppay.zxsddz.MyApplication;
 import com.shoppay.zxsddz.R;
+import com.shoppay.zxsddz.bean.PayType;
 import com.shoppay.zxsddz.bean.ShopCar;
 import com.shoppay.zxsddz.bean.SystemQuanxian;
+import com.shoppay.zxsddz.bean.YhqMsg;
 import com.shoppay.zxsddz.db.DBAdapter;
 import com.shoppay.zxsddz.http.InterfaceBack;
 import com.shoppay.zxsddz.modle.ImpObtainYhq;
@@ -56,9 +58,14 @@ public class NumRechargeDialog {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
-                case 1:
+                case 8:
+                    yhqMsg = (YhqMsg) msg.obj;
+                    tv_sfmoney.setText(StringUtil.twoNum(yhqMsg.CouPonMoney));
+                    et_zfmoney.setText(StringUtil.twoNum(CommonUtils.del(yfmo, Double.parseDouble(yhqMsg.CouPonMoney)) + ""));
+
                     break;
-                case 2:
+                case 9:
+                    yhqMsg = null;
                     break;
             }
         }
@@ -67,16 +74,19 @@ public class NumRechargeDialog {
     public static Dialog dialog;
     public static EditText et_yhq;
     public static MsgReceiver msgReceiver;
-    public static double yfmoney;
+    public static double yfmo;
     public static String memid;
     public static Activity ac;
+    public static YhqMsg yhqMsg;
+    public static TextView tv_sfmoney;
+    public static TextView et_zfmoney;
 
-    public static Dialog jiesuanDialog(MyApplication app, final Dialog loading, final Activity context,
+    public static Dialog jiesuanDialog(MyApplication app, final Dialog loading, final Activity context, String mid,
                                        int showingLocation, final String type, final double yfmoney, final InterfaceBack handler) {
         final Dialog dialog;
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.dialog_numpay, null);
-        final TextView et_zfmoney = (TextView) view.findViewById(R.id.shoppay_et_money);
+        et_zfmoney = (TextView) view.findViewById(R.id.shoppay_et_money);
         final TextView tv_yfmoney = (TextView) view.findViewById(R.id.shoppay_tv_yfmoney);
         final TextView tv_jiesuan = (TextView) view.findViewById(R.id.tv_jiesuan);
         final EditText et_password = (EditText) view.findViewById(R.id.vip_et_password);
@@ -84,15 +94,23 @@ public class NumRechargeDialog {
         final RelativeLayout rl_password = (RelativeLayout) view.findViewById(R.id.vip_rl_password);
         final RadioGroup mRadiogroup = (RadioGroup) view.findViewById(R.id.radiogroup);
         final SystemQuanxian sysquanxian = app.getSysquanxian();
-
+        ac = context;
+        memid = mid;
+        yfmo = yfmoney;
+        yhqMsg = null;
         LinearLayout li_yhq = view.findViewById(R.id.li_yhq);
         RelativeLayout rl_yhqsao = view.findViewById(R.id.rl_yhqsao);
         et_yhq = view.findViewById(R.id.vip_et_yhq);
-        TextView tv_sfmoney = view.findViewById(R.id.vip_tv_sfmoney);
+        tv_sfmoney = view.findViewById(R.id.vip_tv_sfmoney);
 
         rl_yhqsao.setOnClickListener(new NoDoubleClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
+                // 注册广播
+                msgReceiver = new MsgReceiver();
+                IntentFilter iiiff = new IntentFilter();
+                iiiff.addAction("com.shoppay.wy.numyhqsaomiao");
+                context.registerReceiver(msgReceiver, iiiff);
                 Intent mipca = new Intent(context, MipcaActivityCapture.class);
                 context.startActivityForResult(mipca, 000);
             }
@@ -104,11 +122,6 @@ public class NumRechargeDialog {
         RadioButton rb_wx = (RadioButton) view.findViewById(R.id.rb_wx);
         RadioButton rb_yue = (RadioButton) view.findViewById(R.id.rb_yue);
         RadioButton rb_qita = (RadioButton) view.findViewById(R.id.rb_qita);
-// 注册广播
-        msgReceiver = new MsgReceiver();
-        IntentFilter iiiff = new IntentFilter();
-        iiiff.addAction("com.shoppay.wy.fastsaomiao");
-        context.registerReceiver(msgReceiver, iiiff);
 
 
         et_yhq.addTextChangedListener(new TextWatcher() {
@@ -226,13 +239,7 @@ public class NumRechargeDialog {
             @Override
             protected void onNoDoubleClick(View view) {
                 if (CommonUtils.checkNet(context)) {
-                    if (Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(et_zfmoney.getText().toString()) < 0) {
-                        Toast.makeText(context, "超过应付金额，请检查输入信息",
-                                Toast.LENGTH_SHORT).show();
-                    } else if (Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(et_zfmoney.getText().toString()) > 0) {
-                        Toast.makeText(context, "少于应付金额，请检查输入信息",
-                                Toast.LENGTH_SHORT).show();
-                    } else if (isYue && Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(PreferenceHelper.readString(context, "shoppay", "MemMoney", "0")) > 0) {
+                    if (isYue && Double.parseDouble(et_zfmoney.getText().toString()) - Double.parseDouble(PreferenceHelper.readString(context, "shoppay", "MemMoney", "0")) > 0) {
                         Toast.makeText(MyApplication.context, "余额不足",
                                 Toast.LENGTH_SHORT).show();
                     } else {
@@ -251,14 +258,20 @@ public class NumRechargeDialog {
                         } else {
                             if (isWx) {
                                 if (sysquanxian.iswxpay == 0) {
-                                    handler.onResponse("wxpay");
+                                    PayType payType = new PayType();
+                                    payType.type = "wxpay";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handler.onResponse(payType);
                                     dialog.dismiss();
                                 } else {
                                     jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
                             } else if (isZhifubao) {
                                 if (sysquanxian.iszfbpay == 0) {
-                                    handler.onResponse("zfbpay");
+                                    PayType payType = new PayType();
+                                    payType.type = "zfbpay";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handler.onResponse(payType);
                                     dialog.dismiss();
                                 } else {
                                     jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
@@ -336,6 +349,13 @@ public class NumRechargeDialog {
             params.put("TotalMoney", yfmoney);
             params.put("DiscountMoney", zfmoney);
             params.put("OrderPoint", "");
+            if (null == yhqMsg) {
+                params.put("CouponID", 0);
+                params.put("CouPonMoney", 0);
+            } else {
+                params.put("CouponID", yhqMsg.CouponID);
+                params.put("CouPonMoney", yhqMsg.CouPonMoney);
+            }
             if (isMoney) {
                 params.put("payType", 0);
             } else if (isWx) {
@@ -371,21 +391,35 @@ public class NumRechargeDialog {
                         JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                         if (jso.getInt("flag") == 1) {
                             dialog.dismiss();
+
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                             JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
+
+                            if (null != msgReceiver) {
+                                context.unregisterReceiver(msgReceiver);
+                            }
                             if (jsonObject.getInt("printNumber") == 0) {
                                 dbAdapter.deleteShopCar();
-                                handle.onResponse("");
+                                PayType payType = new PayType();
+                                payType.type = "complete";
+                                payType.money = et_zfmoney.getText().toString();
+                                handle.onResponse(payType);
                             } else {
                                 BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                                 if (bluetoothAdapter.isEnabled()) {
                                     BluetoothUtil.connectBlueTooth(MyApplication.context);
                                     BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
                                     dbAdapter.deleteShopCar();
-                                    handle.onResponse("");
+                                    PayType payType = new PayType();
+                                    payType.type = "complete";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handle.onResponse(payType);
                                 } else {
                                     dbAdapter.deleteShopCar();
-                                    handle.onResponse("");
+                                    PayType payType = new PayType();
+                                    payType.type = "complete";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handle.onResponse(payType);
                                 }
                             }
                         } else {
@@ -471,17 +505,26 @@ public class NumRechargeDialog {
                             JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
                             if (jsonObject.getInt("printNumber") == 0) {
                                 dbAdapter.deleteShopCar();
-                                handle.onResponse("");
+                                PayType payType = new PayType();
+                                payType.type = "complete";
+                                payType.money = et_zfmoney.getText().toString();
+                                handle.onResponse(payType);
                             } else {
                                 BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                                 if (bluetoothAdapter.isEnabled()) {
                                     BluetoothUtil.connectBlueTooth(MyApplication.context);
                                     BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
                                     dbAdapter.deleteShopCar();
-                                    handle.onResponse("");
+                                    PayType payType = new PayType();
+                                    payType.type = "complete";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handle.onResponse(payType);
                                 } else {
                                     dbAdapter.deleteShopCar();
-                                    handle.onResponse("");
+                                    PayType payType = new PayType();
+                                    payType.type = "complete";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handle.onResponse(payType);
                                 }
                             }
                         } else {
@@ -535,7 +578,7 @@ public class NumRechargeDialog {
 
     public static void obtainYhq() {
         ImpObtainYhq yhq = new ImpObtainYhq();
-        yhq.obtainYhq(ac, memid, et_yhq.getText().toString(), yfmoney + "", new InterfaceMVC() {
+        yhq.obtainYhq(ac, memid, et_yhq.getText().toString(), yfmo + "", new InterfaceMVC() {
             @Override
             public void onResponse(int code, Object response) {
                 Message msg = yhhandler.obtainMessage();

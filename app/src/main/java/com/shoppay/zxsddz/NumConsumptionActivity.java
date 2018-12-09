@@ -38,8 +38,10 @@ import com.shoppay.zxsddz.bean.VipInfo;
 import com.shoppay.zxsddz.bean.VipInfoMsg;
 import com.shoppay.zxsddz.bean.VipServece;
 import com.shoppay.zxsddz.card.ReadCardOpt;
+import com.shoppay.zxsddz.card.ReadCardOptHander;
 import com.shoppay.zxsddz.card.ReadCardOptTv;
 import com.shoppay.zxsddz.db.DBAdapter;
+import com.shoppay.zxsddz.http.InterfaceBack;
 import com.shoppay.zxsddz.tools.ActivityStack;
 import com.shoppay.zxsddz.tools.BluetoothUtil;
 import com.shoppay.zxsddz.tools.CommonUtils;
@@ -545,8 +547,19 @@ public class NumConsumptionActivity extends Activity implements View.OnClickList
     protected void onResume() {
         super.onResume();
         if (isVipcar) {
-            new ReadCardOptTv(tv_tvcard);
-            obtainVipInfo();
+            new ReadCardOptHander(new InterfaceBack() {
+                @Override
+                public void onResponse(Object response) {
+                    tv_tvcard.setText(response.toString());
+                    editString = tv_tvcard.getText().toString();
+                    obtainVipInfo();
+                }
+
+                @Override
+                public void onErrorResponse(Object msg) {
+
+                }
+            });
         } else {
             new ReadCardOpt(et_vipcard);
         }

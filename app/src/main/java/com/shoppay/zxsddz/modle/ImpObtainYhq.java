@@ -10,6 +10,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
 import com.shoppay.zxsddz.bean.YhqMsg;
+import com.shoppay.zxsddz.tools.LogUtils;
 import com.shoppay.zxsddz.tools.PreferenceHelper;
 
 import org.json.JSONObject;
@@ -30,6 +31,7 @@ public class ImpObtainYhq {
         params.put("MemID", MemID);
         params.put("CouPonAccount", CouPonAccount);
         params.put("DiscountMoney", DiscountMoney);
+        LogUtils.d("xxparams", params.toString());
 
         client.post(PreferenceHelper.readString(ac, "shoppay", "yuming", "123") + "?Source=3&UserID=" + PreferenceHelper.readString(ac, "shoppay", "UserID", "123") + "&UserShopID=" + PreferenceHelper.readString(ac, "shoppay", "ShopID", "123") + "&Method=GetCouPonMoney", params, new AsyncHttpResponseHandler() {
             @Override
@@ -38,12 +40,11 @@ public class ImpObtainYhq {
                     Log.d("xxDengjiS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                     if (jso.getInt("flag") == 1) {
-                        String data = jso.getString("vdata");
-                        Gson gson = new Gson();
-                        Type listType = new TypeToken<List<YhqMsg>>() {
-                        }.getType();
-                        List<YhqMsg> list = gson.fromJson(data, listType);
-                        interf.onResponse(1, list);
+                        JSONObject data = jso.getJSONObject("vdata");
+                        YhqMsg yhqMsg = new YhqMsg();
+                        yhqMsg.CouponID = data.getString("CouponID");
+                        yhqMsg.CouPonMoney = data.getString("CouPonMoney");
+                        interf.onResponse(1, yhqMsg);
 
                     } else {
                         interf.onErrorResponse(2, jso.getString("msg"));

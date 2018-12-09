@@ -359,6 +359,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                                     break;
                             }
                         }
+                        sysquanxian.isvipcard = 0;
                         myApplication.setSystemQuanxian(sysquanxian);
                         Intent intent = new Intent(ac, HomeActivity.class);
                         intent.putExtra("quanxian", menuquanxian);

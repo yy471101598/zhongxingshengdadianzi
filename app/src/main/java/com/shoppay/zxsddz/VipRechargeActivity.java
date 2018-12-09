@@ -40,6 +40,7 @@ import com.shoppay.zxsddz.bean.VipInfo;
 import com.shoppay.zxsddz.bean.VipInfoMsg;
 import com.shoppay.zxsddz.bean.VipRecharge;
 import com.shoppay.zxsddz.card.ReadCardOpt;
+import com.shoppay.zxsddz.card.ReadCardOptHander;
 import com.shoppay.zxsddz.card.ReadCardOptTv;
 import com.shoppay.zxsddz.http.InterfaceBack;
 import com.shoppay.zxsddz.tools.ActivityStack;
@@ -225,7 +226,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                 try {
                     Log.d("xxReLbS", new String(responseBody, "UTF-8"));
                     JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
-                    if (jso.getInt("flag") == 1) {
+                    if (jso.getInt("flag") == 0) {
                         String data = jso.getString("vdata");
                         Gson gson = new Gson();
                         Type listType = new TypeToken<List<RechargeLb>>() {
@@ -438,11 +439,10 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
         rl_rechage.setOnClickListener(new NoDoubleClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
-                if (et_vipcard.getText().toString().equals("")
-                        || et_vipcard.getText().toString() == null) {
-                    Toast.makeText(getApplicationContext(), "请输入会员卡号",
+                if (isZdy && et_money.getText().toString().equals("")) {
+                    Toast.makeText(getApplicationContext(), "请输入充值金额",
                             Toast.LENGTH_SHORT).show();
-                } else if (et_money.getText().toString() == null || et_money.getText().toString().equals("")) {
+                } else if (!isZdy && tv_tvmoney.getText().toString().equals("")) {
                     Toast.makeText(getApplicationContext(), "请输入充值金额",
                             Toast.LENGTH_SHORT).show();
                 } else {
@@ -514,7 +514,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
         map.put("ordertype", 1);
         orderAccount = DateUtils.getCurrentTime("yyyyMMddHHmmss");
         map.put("account", orderAccount);
-        map.put("money", et_money.getText().toString());
+        map.put("money", isZdy ? et_money.getText().toString() : tv_tvmoney.getText().toString());
 //        0=现金 1=银联 2=微信 3=支付宝
         if (isMoney) {
             map.put("payType", 0);
@@ -597,7 +597,7 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
         RequestParams map = new RequestParams();
         map.put("MemID", PreferenceHelper.readString(ac, "shoppay", "memid", ""));
         map.put("rechargeAccount", ordernum);
-        map.put("money", et_money.getText().toString());
+        map.put("money", isZdy ? et_money.getText().toString() : tv_tvmoney.getText().toString());
 //        0=现金 1=银联 2=微信 3=支付宝
         if (isMoney) {
             map.put("payType", 0);
@@ -636,9 +636,9 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
                             if (bluetoothAdapter.isEnabled()) {
                                 BluetoothUtil.connectBlueTooth(MyApplication.context);
                                 BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
-                                ActivityStack.create().finishActivity(VipRechargeActivity.class);
+                                finish();
                             } else {
-                                ActivityStack.create().finishActivity(VipRechargeActivity.class);
+                                finish();
                             }
                         }
                     } else {
@@ -663,8 +663,19 @@ public class VipRechargeActivity extends Activity implements View.OnClickListene
     protected void onResume() {
         super.onResume();
         if (isVipcar) {
-            new ReadCardOptTv(tv_tvcard);
-            ontainVipInfo();
+            new ReadCardOptHander(new InterfaceBack() {
+                @Override
+                public void onResponse(Object response) {
+                    tv_tvcard.setText(response.toString());
+                    editString = tv_tvcard.getText().toString();
+                    ontainVipInfo();
+                }
+
+                @Override
+                public void onErrorResponse(Object msg) {
+
+                }
+            });
         } else {
             new ReadCardOpt(et_vipcard);
         }

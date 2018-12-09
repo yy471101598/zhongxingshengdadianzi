@@ -36,7 +36,9 @@ import com.shoppay.zxsddz.bean.VipInfo;
 import com.shoppay.zxsddz.bean.VipInfoMsg;
 import com.shoppay.zxsddz.bean.VipQiandaoRecord;
 import com.shoppay.zxsddz.card.ReadCardOpt;
+import com.shoppay.zxsddz.card.ReadCardOptHander;
 import com.shoppay.zxsddz.card.ReadCardOptTv;
+import com.shoppay.zxsddz.http.InterfaceBack;
 import com.shoppay.zxsddz.tools.ActivityStack;
 import com.shoppay.zxsddz.tools.BluetoothUtil;
 import com.shoppay.zxsddz.tools.DayinUtils;
@@ -374,8 +376,19 @@ public class VipQiandaoActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (isVipcar) {
-            new ReadCardOptTv(tv_tvcard);
-            ontainVipInfo();
+            new ReadCardOptHander(new InterfaceBack() {
+                @Override
+                public void onResponse(Object response) {
+                    tv_tvcard.setText(response.toString());
+                    editString = tv_tvcard.getText().toString();
+                    ontainVipInfo();
+                }
+
+                @Override
+                public void onErrorResponse(Object msg) {
+
+                }
+            });
         } else {
             new ReadCardOpt(vipEtCard);
         }

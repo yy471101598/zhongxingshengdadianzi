@@ -36,6 +36,7 @@ import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
 import com.shoppay.zxsddz.adapter.NumRechargeAdapter;
 import com.shoppay.zxsddz.bean.NumServece;
+import com.shoppay.zxsddz.bean.PayType;
 import com.shoppay.zxsddz.bean.Shop;
 import com.shoppay.zxsddz.bean.ShopCar;
 import com.shoppay.zxsddz.bean.SystemQuanxian;
@@ -43,6 +44,7 @@ import com.shoppay.zxsddz.bean.VipInfo;
 import com.shoppay.zxsddz.bean.VipInfoMsg;
 import com.shoppay.zxsddz.bean.VipPayMsg;
 import com.shoppay.zxsddz.card.ReadCardOpt;
+import com.shoppay.zxsddz.card.ReadCardOptHander;
 import com.shoppay.zxsddz.card.ReadCardOptTv;
 import com.shoppay.zxsddz.db.DBAdapter;
 import com.shoppay.zxsddz.http.InterfaceBack;
@@ -92,14 +94,14 @@ public class NumRechargeActivity extends Activity implements
     private ShopChangeReceiver shopchangeReceiver;
     private boolean isSuccess = false;
     private Dialog jiesuanDialog;
-
+    VipInfo info;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
-                    VipInfo info = (VipInfo) msg.obj;
+                    info = (VipInfo) msg.obj;
                     tv_vipname.setText(info.getMemName());
                     tv_vipjifen.setText(info.getMemPoint());
                     tv_vipyue.setText(info.getMemMoney());
@@ -143,6 +145,7 @@ public class NumRechargeActivity extends Activity implements
     private TextView tv_tvcard;
     private boolean isVipcar = false;
     private SystemQuanxian sysquanxian;
+    private PayType payType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,8 +162,8 @@ public class NumRechargeActivity extends Activity implements
         PreferenceHelper.write(ac, "shoppay", "isInput", false);
         PreferenceHelper.write(MyApplication.context, "shoppay", "viptoast", "未查询到会员");
         dbAdapter.deleteShopCar();
-        initView();
         yhqintent = new Intent("com.shoppay.wy.numyhqsaomiao");
+        initView();
         obtainServeceShop();
 
         // 注册广播
@@ -242,8 +245,20 @@ public class NumRechargeActivity extends Activity implements
     protected void onResume() {
         super.onResume();
         if (isVipcar) {
-            new ReadCardOptTv(tv_tvcard);
-            ontainVipInfo();
+            new ReadCardOptHander(new InterfaceBack() {
+                @Override
+                public void onResponse(Object response) {
+                    tv_tvcard.setText(response.toString());
+                    editString = tv_tvcard.getText().toString();
+                    ontainVipInfo();
+                }
+
+                @Override
+                public void onErrorResponse(Object msg) {
+
+                }
+            });
+
         } else {
             new ReadCardOpt(et_card);
         }
@@ -381,14 +396,15 @@ public class NumRechargeActivity extends Activity implements
                         if (!isSuccess) {
                             Toast.makeText(ac, "请输入会员卡号", Toast.LENGTH_SHORT).show();
                         } else {
-                            jiesuanDialog = NumRechargeDialog.jiesuanDialog(app, dialog, NumRechargeActivity.this, 1, "num", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                            jiesuanDialog = NumRechargeDialog.jiesuanDialog(app, dialog, NumRechargeActivity.this, info.getMemID(), 1, "num", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
-                                    if (response.toString().equals("wxpay")) {
+                                    payType=(PayType) response;
+                                    if (payType.type.equals("wxpay")) {
                                         paytype = "wx";
                                         Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                         startActivityForResult(mipca, 333);
-                                    } else if (response.toString().equals("zfbpay")) {
+                                    } else if (payType.type.equals("zfbpay")) {
                                         paytype = "zfb";
                                         Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                         startActivityForResult(mipca, 333);
@@ -460,7 +476,7 @@ public class NumRechargeActivity extends Activity implements
         map.put("ordertype", 11);
         orderAccount = DateUtils.getCurrentTime("yyyyMMddHHmmss");
         map.put("account", orderAccount);
-        map.put("money", tv_money.getText().toString());
+        map.put("money",payType.money);
 //        0=现金 1=银联 2=微信 3=支付宝
         switch (paytype) {
             case "wx":
