@@ -56,7 +56,7 @@ public class ShopXiaofeiDialog {
     public static boolean isMoney = true, isYue = false, isZhifubao = false, isYinlian = false, isQita = false, isWx = false;
     public static Dialog dialog;
     public static EditText et_yhq;
-    public static NumRechargeDialog.MsgReceiver msgReceiver;
+    public static MsgReceiver msgReceiver;
     public static double yfmo;
     public static String memid;
     public static Activity ac;
@@ -239,7 +239,7 @@ public class ShopXiaofeiDialog {
             @Override
             protected void onNoDoubleClick(View view) {
                 // 注册广播
-                msgReceiver = new NumRechargeDialog.MsgReceiver();
+                msgReceiver = new MsgReceiver();
                 IntentFilter iiiff = new IntentFilter();
                 iiiff.addAction("com.shoppay.wy.balanceyhqsaomiao");
                 context.registerReceiver(msgReceiver, iiiff);
@@ -251,7 +251,7 @@ public class ShopXiaofeiDialog {
             @Override
             protected void onNoDoubleClick(View view) {
                 if (CommonUtils.checkNet(context)) {
-                   if (isYue && Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(PreferenceHelper.readString(context, "shoppay", "MemMoney", "0")) > 0) {
+                    if (isYue && Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(PreferenceHelper.readString(context, "shoppay", "MemMoney", "0")) > 0) {
                         Toast.makeText(MyApplication.context, "余额不足",
                                 Toast.LENGTH_SHORT).show();
                     } else {
@@ -274,12 +274,12 @@ public class ShopXiaofeiDialog {
                                     PayType payType = new PayType();
                                     payType.type = "wxpay";
                                     payType.money = et_zfmoney.getText().toString();
-                                    if(null==yhqMsg){
-                                        payType.CouponID="0";
-                                        payType.CouPonMoney="0";
-                                    }else{
-                                        payType.CouponID=yhqMsg.CouponID;
-                                        payType.CouPonMoney=yhqMsg.CouPonMoney;
+                                    if (null == yhqMsg) {
+                                        payType.CouponID = "0";
+                                        payType.CouPonMoney = "0";
+                                    } else {
+                                        payType.CouponID = yhqMsg.CouponID;
+                                        payType.CouPonMoney = yhqMsg.CouPonMoney;
                                     }
                                     handler.onResponse(payType);
                                     dialog.dismiss();
@@ -291,12 +291,12 @@ public class ShopXiaofeiDialog {
                                     PayType payType = new PayType();
                                     payType.type = "zfbpay";
                                     payType.money = et_zfmoney.getText().toString();
-                                    if(null==yhqMsg){
-                                        payType.CouponID="0";
-                                        payType.CouPonMoney="0";
-                                    }else{
-                                        payType.CouponID=yhqMsg.CouponID;
-                                        payType.CouPonMoney=yhqMsg.CouPonMoney;
+                                    if (null == yhqMsg) {
+                                        payType.CouponID = "0";
+                                        payType.CouPonMoney = "0";
+                                    } else {
+                                        payType.CouponID = yhqMsg.CouponID;
+                                        payType.CouPonMoney = yhqMsg.CouPonMoney;
                                     }
                                     handler.onResponse(payType);
                                     dialog.dismiss();
@@ -378,7 +378,7 @@ public class ShopXiaofeiDialog {
             params.put("OrderPoint", "");
             if (null == yhqMsg) {
                 params.put("CouponID", "0");
-                params.put("CouPonMoney","0");
+                params.put("CouPonMoney", "0");
             } else {
                 params.put("CouponID", yhqMsg.CouponID);
                 params.put("CouPonMoney", yhqMsg.CouPonMoney);
@@ -493,7 +493,7 @@ public class ShopXiaofeiDialog {
             params.put("OrderPoint", point);
             if (null == yhqMsg) {
                 params.put("CouponID", "0");
-                params.put("CouPonMoney","0");
+                params.put("CouPonMoney", "0");
             } else {
                 params.put("CouponID", yhqMsg.CouponID);
                 params.put("CouPonMoney", yhqMsg.CouPonMoney);
@@ -534,6 +534,7 @@ public class ShopXiaofeiDialog {
                         LogUtils.d("xxjiesuanS", new String(responseBody, "UTF-8"));
                         JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                         if (jso.getInt("flag") == 1) {
+                            dialog.dismiss();
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                             JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
                             if (null != msgReceiver) {

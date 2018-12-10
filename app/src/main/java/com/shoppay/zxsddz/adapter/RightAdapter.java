@@ -56,7 +56,7 @@ public class RightAdapter extends BaseAdapter {
             this.list = list;
         }
         inflater = LayoutInflater.from(context);
-        intent = new Intent("com.shoppay.wy.numberchange");
+        intent = new Intent("com.shoppay.wy.balancechange");
         dialog = DialogUtil.loadingDialog(context, 1);
         dbAdapter = DBAdapter.getInstance(context);
     }
@@ -110,13 +110,13 @@ public class RightAdapter extends BaseAdapter {
         vh.tv_num.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ShopNumChoseDialog.numchoseDialog(context, 1, Integer.parseInt(vh.tv_num.getText().toString()), Integer.parseInt(home.Number), home.GoodsType,new InterfaceBack() {
+                ShopNumChoseDialog.numchoseDialog(context, 1, Integer.parseInt(vh.tv_num.getText().toString()), Integer.parseInt(home.Number), home.GoodsType, new InterfaceBack() {
                     @Override
                     public void onResponse(Object response) {
-                        vh.tv_num.setText((String)response);
-                        if(PreferenceHelper.readBoolean(context, "shoppay", "isSan", true)) {
+                        vh.tv_num.setText((String) response);
+                        if (PreferenceHelper.readBoolean(context, "shoppay", "isSan", true)) {
                             insertShopCar(PreferenceHelper.readBoolean(context, "shoppay", "isSan", true), null, home, Integer.parseInt((String) response));
-                        }else{
+                        } else {
                             Zhekou zk = new Zhekou();
                             ShopCar shopCar = dbAdapter.getShopCar(home.GoodsID);
                             zk.DiscountPrice = shopCar.discount;
@@ -145,17 +145,17 @@ public class RightAdapter extends BaseAdapter {
                     ShopCar shopCar = dbAdapter.getShopCar(home.GoodsID);
                     if (shopCar == null) {
                         if (Integer.parseInt(home.Number) < 1) {
-                            if(home.GoodsType.equals("1")){
+                            if (home.GoodsType.equals("1")) {
                                 num = 1;
                                 vh.tv_num.setText(num + "");
                                 insertShopCar(PreferenceHelper.readBoolean(context, "shoppay", "isSan", true), null, home, num);
-                            }else {
+                            } else {
                                 num = 0;
                                 Toast.makeText(context, "该商品的最大库存量为" + home.Number, Toast.LENGTH_SHORT).show();
                                 vh.tv_num.setVisibility(View.GONE);
                                 vh.img_del.setVisibility(View.GONE);
                             }
-                        }else {
+                        } else {
                             num = 1;
                             vh.tv_num.setText(num + "");
                             insertShopCar(PreferenceHelper.readBoolean(context, "shoppay", "isSan", true), null, home, num);
@@ -163,14 +163,14 @@ public class RightAdapter extends BaseAdapter {
                     } else {
                         num = num + 1;
                         if (Integer.parseInt(home.Number) < num) {
-                            if(home.GoodsType.equals("1")){
+                            if (home.GoodsType.equals("1")) {
                                 vh.tv_num.setText(num + "");
                                 insertShopCar(PreferenceHelper.readBoolean(context, "shoppay", "isSan", true), null, home, num);
-                            }else {
+                            } else {
                                 num = num - 1;
                                 Toast.makeText(context, "该商品的最大库存量为" + home.Number, Toast.LENGTH_SHORT).show();
                             }
-                        }else {
+                        } else {
                             vh.tv_num.setText(num + "");
                             insertShopCar(PreferenceHelper.readBoolean(context, "shoppay", "isSan", true), null, home, num);
                         }
@@ -188,17 +188,17 @@ public class RightAdapter extends BaseAdapter {
                         ShopCar shopCar = dbAdapter.getShopCar(home.GoodsID);
                         if (shopCar == null) {
                             if (Integer.parseInt(home.Number) < 1) {
-                                if(home.GoodsType.equals("1")) {
+                                if (home.GoodsType.equals("1")) {
                                     num = 1;
                                     vh.tv_num.setText(num + "");
                                     obtainShopZhekou(home);
-                                }else {
+                                } else {
                                     num = 0;
                                     Toast.makeText(context, "该商品的最大库存量为" + home.Number, Toast.LENGTH_SHORT).show();
                                     vh.tv_num.setVisibility(View.GONE);
                                     vh.img_del.setVisibility(View.GONE);
                                 }
-                            }else {
+                            } else {
                                 num = 1;
                                 vh.tv_num.setText(num + "");
                                 obtainShopZhekou(home);
@@ -206,17 +206,17 @@ public class RightAdapter extends BaseAdapter {
                         } else {
                             num = num + 1;
                             if (Integer.parseInt(home.Number) < num) {
-                                if(home.GoodsType.equals("1")) {
+                                if (home.GoodsType.equals("1")) {
                                     vh.tv_num.setText(num + "");
                                     Zhekou zk = new Zhekou();
                                     zk.DiscountPrice = shopCar.discount;
                                     zk.GoodsPoint = shopCar.pointPercent;
                                     insertShopCar(PreferenceHelper.readBoolean(context, "shoppay", "isSan", true), zk, home, num);
-                                }else {
+                                } else {
                                     num = num - 1;
                                     Toast.makeText(context, "该商品的最大库存量为" + home.Number, Toast.LENGTH_SHORT).show();
                                 }
-                            }else {
+                            } else {
                                 vh.tv_num.setText(num + "");
                                 Zhekou zk = new Zhekou();
                                 zk.DiscountPrice = shopCar.discount;
@@ -315,16 +315,16 @@ public class RightAdapter extends BaseAdapter {
         shopCar.account = PreferenceHelper.readString(context, "shoppay", "account", "123");
         shopCar.count = num;
         if (isSan) {
-            shopCar.discount =shop.GoodsPrice;
+            shopCar.discount = shop.GoodsPrice;
             shopCar.discountmoney = StringUtil.twoNum(Double.parseDouble(shop.GoodsPrice) * num + "");
             shopCar.point = 0;
             shopCar.pointPercent = "0";
-            shopCar.goodspoint =0;
+            shopCar.goodspoint = 0;
         } else {
             double dimoney = num * Double.parseDouble(zk.DiscountPrice);
             shopCar.discount = zk.DiscountPrice;
             shopCar.discountmoney = StringUtil.twoNum(dimoney + "");
-            shopCar.point = Double.parseDouble(CommonUtils.multiply(zk.GoodsPoint,num+""));
+            shopCar.point = Double.parseDouble(CommonUtils.multiply(zk.GoodsPoint, num + ""));
             shopCar.pointPercent = zk.GoodsPoint;
             shopCar.goodspoint = Integer.parseInt(zk.GoodsPoint);
         }

@@ -458,8 +458,10 @@ public class NumRechargeActivity extends Activity implements
                 break;
 
             case 000:
-                yhqintent.putExtra("code", data.getStringExtra("codedata"));
-                sendBroadcast(yhqintent);
+                if (resultCode == RESULT_OK) {
+                    yhqintent.putExtra("code", data.getStringExtra("codedata"));
+                    sendBroadcast(yhqintent);
+                }
                 break;
         }
     }

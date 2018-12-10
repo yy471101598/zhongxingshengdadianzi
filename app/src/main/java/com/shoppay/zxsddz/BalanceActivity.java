@@ -186,7 +186,7 @@ public class BalanceActivity extends FragmentActivity implements
         // 注册广播
         shopchangeReceiver = new ShopChangeReceiver();
         IntentFilter iiiff = new IntentFilter();
-        iiiff.addAction("com.shoppay.wy.numberchange");
+        iiiff.addAction("com.shoppay.wy.balancechange");
         registerReceiver(shopchangeReceiver, iiiff);
 
 
@@ -535,7 +535,7 @@ public class BalanceActivity extends FragmentActivity implements
                                 });
                             }
                         } else {//散客结算
-                            ShopXiaofeiDialog.jiesuanDialog(app, false, dialog, BalanceActivity.this, info.getMemID(), 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                            ShopXiaofeiDialog.jiesuanDialog(app, false, dialog, BalanceActivity.this, info==null?"":info.getMemID(), 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
                                     payType = (PayType) response;
@@ -675,8 +675,10 @@ public class BalanceActivity extends FragmentActivity implements
                     pay(data.getStringExtra("codedata"));
                 }
             case 000:
-                yhqintent.putExtra("code", data.getStringExtra("codedata"));
-                sendBroadcast(yhqintent);
+                if (resultCode == RESULT_OK) {
+                    yhqintent.putExtra("code", data.getStringExtra("codedata"));
+                    sendBroadcast(yhqintent);
+                }
                 break;
         }
     }

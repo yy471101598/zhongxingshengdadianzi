@@ -306,12 +306,28 @@ public class VipFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if (yhqRun != null) {
-                    //每次editText有变化的时候，则移除上次发出的延迟线程
-                    handler.removeCallbacks(yhqRun);
+                if (editable.toString().equals("")) {
+                    mYhqMsg = null;
+                } else {
+                    if (isSuccess) {
+                        if (!et_xfmoney.getText().toString().equals("")) {
+                            if (yhqRun != null) {
+                                //每次editText有变化的时候，则移除上次发出的延迟线程
+                                handler.removeCallbacks(yhqRun);
+                            }
+                            //延迟800ms，如果不再输入字符，则执行该线程的run方法
+                            handler.postDelayed(yhqRun, 800);
+                        } else {
+                            et_yhq.setText("");
+                            Toast.makeText(MyApplication.context, "请输入消费金额",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        et_yhq.setText("");
+                        Toast.makeText(MyApplication.context, "请输入会员卡号",
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
-                //延迟800ms，如果不再输入字符，则执行该线程的run方法
-                handler.postDelayed(yhqRun, 800);
             }
         });
         et_xfmoney.addTextChangedListener(new TextWatcher() {
@@ -595,8 +611,18 @@ public class VipFragment extends Fragment {
         rl_yhqsao.setOnClickListener(new NoDoubleClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
-                Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
-                startActivityForResult(mipca, 000);
+                if (isSuccess) {
+                    if (!et_xfmoney.getText().toString().equals("")) {
+                        Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
+                        startActivityForResult(mipca, 000);
+                    } else {
+                        Toast.makeText(MyApplication.context, "请输入消费金额",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(MyApplication.context, "请输入会员卡号",
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -616,50 +642,42 @@ public class VipFragment extends Fragment {
                             Toast.LENGTH_SHORT).show();
                 } else {
                     if (CommonUtils.checkNet(MyApplication.context)) {
-                        if (Double.parseDouble(tv_sfmoney.getText().toString()) - money > 0) {
-                            Toast.makeText(MyApplication.context, "少于应付金额，请检查输入信息",
-                                    Toast.LENGTH_SHORT).show();
-                        } else if (Double.parseDouble(tv_sfmoney.getText().toString()) - money < 0) {
-                            Toast.makeText(MyApplication.context, "大于应付金额，请检查输入信息",
-                                    Toast.LENGTH_SHORT).show();
-                        } else {
 
-                            if (isYue && sysquanxian.ispassword == 1) {
-                                DialogUtil.pwdDialog(getActivity(), 1, new InterfaceBack() {
-                                    @Override
-                                    public void onResponse(Object response) {
-                                        password = (String) response;
-                                        jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
-                                    }
-
-                                    @Override
-                                    public void onErrorResponse(Object msg) {
-
-                                    }
-                                });
-                            } else {
-                                if (isWx) {
-                                    if (sysquanxian.iswxpay == 0) {
-                                        Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
-                                        mipca.putExtra("type", "pay");
-                                        startActivityForResult(mipca, 222);
-                                    } else {
-                                        jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
-                                    }
-                                } else if (isZhifubao) {
-                                    if (sysquanxian.iszfbpay == 0) {
-                                        Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
-                                        mipca.putExtra("type", "pay");
-                                        startActivityForResult(mipca, 222);
-                                    } else {
-                                        jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
-                                    }
-                                } else {
+                        if (isYue && sysquanxian.ispassword == 1) {
+                            DialogUtil.pwdDialog(getActivity(), 1, new InterfaceBack() {
+                                @Override
+                                public void onResponse(Object response) {
+                                    password = (String) response;
                                     jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
 
+                                @Override
+                                public void onErrorResponse(Object msg) {
 
+                                }
+                            });
+                        } else {
+                            if (isWx) {
+                                if (sysquanxian.iswxpay == 0) {
+                                    Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
+                                    mipca.putExtra("type", "pay");
+                                    startActivityForResult(mipca, 222);
+                                } else {
+                                    jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                }
+                            } else if (isZhifubao) {
+                                if (sysquanxian.iszfbpay == 0) {
+                                    Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
+                                    mipca.putExtra("type", "pay");
+                                    startActivityForResult(mipca, 222);
+                                } else {
+                                    jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
+                                }
+                            } else {
+                                jiesuan(DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                             }
+
+
                         }
                     } else {
                         Toast.makeText(MyApplication.context, "请检查网络是否可用",
