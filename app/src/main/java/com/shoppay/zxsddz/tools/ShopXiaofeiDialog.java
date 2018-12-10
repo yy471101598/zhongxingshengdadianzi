@@ -1,8 +1,16 @@
 package com.shoppay.zxsddz.tools;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Handler;
+import android.os.Message;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -23,10 +31,15 @@ import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
 import com.shoppay.zxsddz.MyApplication;
 import com.shoppay.zxsddz.R;
+import com.shoppay.zxsddz.bean.PayType;
 import com.shoppay.zxsddz.bean.ShopCar;
 import com.shoppay.zxsddz.bean.SystemQuanxian;
+import com.shoppay.zxsddz.bean.YhqMsg;
 import com.shoppay.zxsddz.db.DBAdapter;
 import com.shoppay.zxsddz.http.InterfaceBack;
+import com.shoppay.zxsddz.modle.ImpObtainYhq;
+import com.shoppay.zxsddz.modle.InterfaceMVC;
+import com.shoppay.zxsddz.wxcode.MipcaActivityCapture;
 
 import org.json.JSONObject;
 
@@ -42,13 +55,38 @@ import cz.msebera.android.httpclient.Header;
 public class ShopXiaofeiDialog {
     public static boolean isMoney = true, isYue = false, isZhifubao = false, isYinlian = false, isQita = false, isWx = false;
     public static Dialog dialog;
+    public static EditText et_yhq;
+    public static NumRechargeDialog.MsgReceiver msgReceiver;
+    public static double yfmo;
+    public static String memid;
+    public static Activity ac;
+    public static YhqMsg yhqMsg;
+    public static TextView tv_sfmoney;
+    public static TextView et_zfmoney;
+    public static Handler yhhandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 8:
+                    yhqMsg = (YhqMsg) msg.obj;
+                    tv_sfmoney.setText(StringUtil.twoNum(yhqMsg.CouPonMoney));
+                    et_zfmoney.setText(StringUtil.twoNum(CommonUtils.del(yfmo, Double.parseDouble(yhqMsg.CouPonMoney)) + ""));
 
-    public static Dialog jiesuanDialog(MyApplication app, final boolean isVip, final Dialog loading, final Context context,
+                    break;
+                case 9:
+                    yhqMsg = null;
+                    break;
+            }
+        }
+    };
+
+    public static Dialog jiesuanDialog(MyApplication app, final boolean isVip, final Dialog loading, final Activity context, String mid,
                                        int showingLocation, final String type, final double yfmoney, final InterfaceBack handler) {
         final Dialog dialog;
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.dialog_shoppay, null);
-        final TextView et_zfmoney = (TextView) view.findViewById(R.id.shoppay_et_money);
+        et_zfmoney = (TextView) view.findViewById(R.id.shoppay_et_money);
         final TextView tv_yfmoney = (TextView) view.findViewById(R.id.shoppay_tv_yfmoney);
         final TextView tv_jiesuan = (TextView) view.findViewById(R.id.tv_jiesuan);
         final EditText et_password = (EditText) view.findViewById(R.id.vip_et_password);
@@ -56,6 +94,10 @@ public class ShopXiaofeiDialog {
         final RelativeLayout rl_password = (RelativeLayout) view.findViewById(R.id.vip_rl_password);
         final RadioGroup mRadiogroup = (RadioGroup) view.findViewById(R.id.radiogroup);
         final SystemQuanxian sysquanxian = app.getSysquanxian();
+        ac = context;
+        memid = mid;
+        yfmo = yfmoney;
+        yhqMsg = null;
         RadioButton rb_isYinlian = (RadioButton) view.findViewById(R.id.rb_yinlian);
         RadioButton rb_money = (RadioButton) view.findViewById(R.id.rb_money);
         RadioButton rb_zhifubao = (RadioButton) view.findViewById(R.id.rb_zhifubao);
@@ -64,9 +106,9 @@ public class ShopXiaofeiDialog {
         RadioButton rb_qita = (RadioButton) view.findViewById(R.id.rb_qita);
         LinearLayout li_yhq = view.findViewById(R.id.li_yhq);
         RelativeLayout rl_yhqsao = view.findViewById(R.id.rl_yhqsao);
-        EditText et_yhq = view.findViewById(R.id.vip_et_yhq);
-        TextView tv_sfmoney = view.findViewById(R.id.vip_tv_sfmoney);
-        if(!isVip){
+        et_yhq = view.findViewById(R.id.vip_et_yhq);
+        tv_sfmoney = view.findViewById(R.id.vip_tv_sfmoney);
+        if (!isVip) {
             li_yhq.setVisibility(View.GONE);
         }
 
@@ -172,17 +214,44 @@ public class ShopXiaofeiDialog {
         });
         tv_yfmoney.setText(StringUtil.twoNum(yfmoney + ""));
         et_zfmoney.setText(StringUtil.twoNum(yfmoney + ""));
+        et_yhq.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (yhqRun != null) {
+                    //每次editText有变化的时候，则移除上次发出的延迟线程
+                    yhhandler.removeCallbacks(yhqRun);
+                }
+                //延迟800ms，如果不再输入字符，则执行该线程的run方法
+                yhhandler.postDelayed(yhqRun, 800);
+            }
+        });
+        rl_yhqsao.setOnClickListener(new NoDoubleClickListener() {
+            @Override
+            protected void onNoDoubleClick(View view) {
+                // 注册广播
+                msgReceiver = new NumRechargeDialog.MsgReceiver();
+                IntentFilter iiiff = new IntentFilter();
+                iiiff.addAction("com.shoppay.wy.balanceyhqsaomiao");
+                context.registerReceiver(msgReceiver, iiiff);
+                Intent mipca = new Intent(context, MipcaActivityCapture.class);
+                context.startActivityForResult(mipca, 000);
+            }
+        });
         rl_jiesuan.setOnClickListener(new NoDoubleClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
                 if (CommonUtils.checkNet(context)) {
-                    if (Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(et_zfmoney.getText().toString()) < 0) {
-                        Toast.makeText(context, "超过应付金额，请检查输入信息",
-                                Toast.LENGTH_SHORT).show();
-                    } else if (Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(et_zfmoney.getText().toString()) > 0) {
-                        Toast.makeText(context, "少于应付金额，请检查输入信息",
-                                Toast.LENGTH_SHORT).show();
-                    } else if (isYue && Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(PreferenceHelper.readString(context, "shoppay", "MemMoney", "0")) > 0) {
+                   if (isYue && Double.parseDouble(tv_yfmoney.getText().toString()) - Double.parseDouble(PreferenceHelper.readString(context, "shoppay", "MemMoney", "0")) > 0) {
                         Toast.makeText(MyApplication.context, "余额不足",
                                 Toast.LENGTH_SHORT).show();
                     } else {
@@ -202,14 +271,34 @@ public class ShopXiaofeiDialog {
 
                             if (isWx) {
                                 if (sysquanxian.iswxpay == 0) {
-                                    handler.onResponse("wxpay");
+                                    PayType payType = new PayType();
+                                    payType.type = "wxpay";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    if(null==yhqMsg){
+                                        payType.CouponID="0";
+                                        payType.CouPonMoney="0";
+                                    }else{
+                                        payType.CouponID=yhqMsg.CouponID;
+                                        payType.CouPonMoney=yhqMsg.CouPonMoney;
+                                    }
+                                    handler.onResponse(payType);
                                     dialog.dismiss();
                                 } else {
                                     jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
                                 }
                             } else if (isZhifubao) {
                                 if (sysquanxian.iszfbpay == 0) {
-                                    handler.onResponse("zfbpay");
+                                    PayType payType = new PayType();
+                                    payType.type = "zfbpay";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    if(null==yhqMsg){
+                                        payType.CouponID="0";
+                                        payType.CouPonMoney="0";
+                                    }else{
+                                        payType.CouponID=yhqMsg.CouponID;
+                                        payType.CouPonMoney=yhqMsg.CouPonMoney;
+                                    }
+                                    handler.onResponse(payType);
                                     dialog.dismiss();
                                 } else {
                                     jiesuan(loading, type, handler, dialog, context, "", DateUtils.getCurrentTime("yyyyMMddHHmmss"));
@@ -287,6 +376,13 @@ public class ShopXiaofeiDialog {
             params.put("TotalMoney", yfmoney);
             params.put("DiscountMoney", zfmoney);
             params.put("OrderPoint", "");
+            if (null == yhqMsg) {
+                params.put("CouponID", "0");
+                params.put("CouPonMoney","0");
+            } else {
+                params.put("CouponID", yhqMsg.CouponID);
+                params.put("CouPonMoney", yhqMsg.CouPonMoney);
+            }
             if (isMoney) {
                 params.put("payType", 0);
             } else if (isWx) {
@@ -325,19 +421,31 @@ public class ShopXiaofeiDialog {
                             dialog.dismiss();
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                             JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
+                            if (null != msgReceiver) {
+                                context.unregisterReceiver(msgReceiver);
+                            }
                             if (jsonObject.getInt("printNumber") == 0) {
                                 dbAdapter.deleteShopCar();
-                                handle.onResponse("");
+                                PayType payType = new PayType();
+                                payType.type = "complete";
+                                payType.money = et_zfmoney.getText().toString();
+                                handle.onResponse(payType);
                             } else {
                                 BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                                 if (bluetoothAdapter.isEnabled()) {
                                     BluetoothUtil.connectBlueTooth(MyApplication.context);
                                     BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
                                     dbAdapter.deleteShopCar();
-                                    handle.onResponse("");
+                                    PayType payType = new PayType();
+                                    payType.type = "complete";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handle.onResponse(payType);
                                 } else {
                                     dbAdapter.deleteShopCar();
-                                    handle.onResponse("");
+                                    PayType payType = new PayType();
+                                    payType.type = "complete";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handle.onResponse(payType);
                                 }
                             }
                         } else {
@@ -383,6 +491,13 @@ public class ShopXiaofeiDialog {
             params.put("TotalMoney", yfmoney);
             params.put("DiscountMoney", zfmoney);
             params.put("OrderPoint", point);
+            if (null == yhqMsg) {
+                params.put("CouponID", "0");
+                params.put("CouPonMoney","0");
+            } else {
+                params.put("CouponID", yhqMsg.CouponID);
+                params.put("CouPonMoney", yhqMsg.CouPonMoney);
+            }
             if (isMoney) {
                 params.put("payType", 0);
             } else if (isWx) {
@@ -421,19 +536,31 @@ public class ShopXiaofeiDialog {
                         if (jso.getInt("flag") == 1) {
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                             JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
+                            if (null != msgReceiver) {
+                                context.unregisterReceiver(msgReceiver);
+                            }
                             if (jsonObject.getInt("printNumber") == 0) {
                                 dbAdapter.deleteShopCar();
-                                handle.onResponse("");
+                                PayType payType = new PayType();
+                                payType.type = "complete";
+                                payType.money = et_zfmoney.getText().toString();
+                                handle.onResponse(payType);
                             } else {
                                 BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                                 if (bluetoothAdapter.isEnabled()) {
                                     BluetoothUtil.connectBlueTooth(MyApplication.context);
                                     BluetoothUtil.sendData(DayinUtils.dayin(jsonObject.getString("printContent")), jsonObject.getInt("printNumber"));
                                     dbAdapter.deleteShopCar();
-                                    handle.onResponse("");
+                                    PayType payType = new PayType();
+                                    payType.type = "complete";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handle.onResponse(payType);
                                 } else {
                                     dbAdapter.deleteShopCar();
-                                    handle.onResponse("");
+                                    PayType payType = new PayType();
+                                    payType.type = "complete";
+                                    payType.money = et_zfmoney.getText().toString();
+                                    handle.onResponse(payType);
                                 }
                             }
                         } else {
@@ -454,5 +581,55 @@ public class ShopXiaofeiDialog {
             });
 
         }
+    }
+
+
+    /**
+     * 广播接收器
+     *
+     * @author len
+     */
+    public static class MsgReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //拿到进度，更新UI
+            String code = intent.getStringExtra("code");
+            et_yhq.setText(code);
+
+        }
+
+    }
+
+    /**
+     * 延迟线程，看是否还有下一个字符输入
+     */
+    public static Runnable yhqRun = new Runnable() {
+
+        @Override
+        public void run() {
+            //在这里调用服务器的接口，获取数据
+            obtainYhq();
+        }
+    };
+
+    public static void obtainYhq() {
+        ImpObtainYhq yhq = new ImpObtainYhq();
+        yhq.obtainYhq(ac, memid, et_yhq.getText().toString(), yfmo + "", new InterfaceMVC() {
+            @Override
+            public void onResponse(int code, Object response) {
+                Message msg = yhhandler.obtainMessage();
+                msg.what = 8;
+                msg.obj = response;
+                yhhandler.sendMessage(msg);
+            }
+
+            @Override
+            public void onErrorResponse(int code, Object msg1) {
+                Message msg = yhhandler.obtainMessage();
+                msg.what = 9;
+                yhhandler.sendMessage(msg);
+            }
+        });
     }
 }

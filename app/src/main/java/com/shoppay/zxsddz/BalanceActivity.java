@@ -38,6 +38,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.PersistentCookieStore;
 import com.loopj.android.http.RequestParams;
 import com.shoppay.zxsddz.adapter.LeftAdapter;
+import com.shoppay.zxsddz.bean.PayType;
 import com.shoppay.zxsddz.bean.Shop;
 import com.shoppay.zxsddz.bean.ShopCar;
 import com.shoppay.zxsddz.bean.ShopClass;
@@ -112,13 +113,14 @@ public class BalanceActivity extends FragmentActivity implements
     private EditText et_shopcode;
     private RelativeLayout rl_right;
     private Boolean isSuccess = false;
+    private VipInfo info;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
-                    VipInfo info = (VipInfo) msg.obj;
+                    info = (VipInfo) msg.obj;
                     tv_vipname.setText(info.getMemName());
                     tv_vipjifen.setText(info.getMemPoint());
                     tv_vipyue.setText(info.getMemMoney());
@@ -159,6 +161,8 @@ public class BalanceActivity extends FragmentActivity implements
     private TextView tv_tvcard;
     private boolean isVipcar = false;
     private SystemQuanxian sysquanxian;
+    private Intent yhqintent;
+    private PayType payType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,6 +181,7 @@ public class BalanceActivity extends FragmentActivity implements
         PreferenceHelper.write(context, "shoppay", "viptoast", "未查询到会员");
         mPosition = 0;
         dbAdapter.deleteShopCar();
+        yhqintent = new Intent("com.shoppay.wy.balanceyhqsaomiao");
         initView();
         // 注册广播
         shopchangeReceiver = new ShopChangeReceiver();
@@ -505,14 +510,16 @@ public class BalanceActivity extends FragmentActivity implements
                                 Toast.makeText(ac, "您选择的是会员结算，请确认会员信息是否正确", Toast.LENGTH_SHORT).show();
                             } else {//会员结算
 //
-                                ShopXiaofeiDialog.jiesuanDialog(app, true, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                                ShopXiaofeiDialog.jiesuanDialog(app, true, dialog, BalanceActivity.this, info.getMemID(), 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                     @Override
                                     public void onResponse(Object response) {
-                                        if (response.toString().equals("wxpay")) {
+
+                                        payType = (PayType) response;
+                                        if (payType.type.equals("wxpay")) {
                                             paytype = "wx";
                                             Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                             startActivityForResult(mipca, 333);
-                                        } else if (response.toString().equals("zfbpay")) {
+                                        } else if (payType.type.equals("zfbpay")) {
                                             paytype = "zfb";
                                             Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                             startActivityForResult(mipca, 333);
@@ -528,14 +535,15 @@ public class BalanceActivity extends FragmentActivity implements
                                 });
                             }
                         } else {//散客结算
-                            ShopXiaofeiDialog.jiesuanDialog(app, false, dialog, BalanceActivity.this, 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
+                            ShopXiaofeiDialog.jiesuanDialog(app, false, dialog, BalanceActivity.this, info.getMemID(), 1, "shop", Double.parseDouble(tv_money.getText().toString()), new InterfaceBack() {
                                 @Override
                                 public void onResponse(Object response) {
-                                    if (response.toString().equals("wxpay")) {
+                                    payType = (PayType) response;
+                                    if (payType.type.equals("wxpay")) {
                                         paytype = "wx";
                                         Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                         startActivityForResult(mipca, 333);
-                                    } else if (response.toString().equals("zfbpay")) {
+                                    } else if (payType.type.equals("zfbpay")) {
                                         paytype = "zfb";
                                         Intent mipca = new Intent(ac, MipcaActivityCapture.class);
                                         startActivityForResult(mipca, 333);
@@ -666,6 +674,9 @@ public class BalanceActivity extends FragmentActivity implements
                 if (resultCode == RESULT_OK) {
                     pay(data.getStringExtra("codedata"));
                 }
+            case 000:
+                yhqintent.putExtra("code", data.getStringExtra("codedata"));
+                sendBroadcast(yhqintent);
                 break;
         }
     }
@@ -682,7 +693,7 @@ public class BalanceActivity extends FragmentActivity implements
         map.put("ordertype", 7);
         orderAccount = DateUtils.getCurrentTime("yyyyMMddHHmmss");
         map.put("account", orderAccount);
-        map.put("money", tv_money.getText().toString());
+        map.put("money", payType.money);
 //        0=现金 1=银联 2=微信 3=支付宝
         switch (paytype) {
             case "wx":
@@ -762,6 +773,8 @@ public class BalanceActivity extends FragmentActivity implements
         params.put("TotalMoney", yfmoney);
         params.put("DiscountMoney", zfmoney);
         params.put("OrderPoint", point);
+        params.put("CouponID", payType.CouponID);
+        params.put("CouPonMoney", payType.CouPonMoney);
         switch (paytype) {
             case "wx":
                 params.put("payType", 2);

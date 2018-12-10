@@ -554,6 +554,8 @@ public class NumRechargeActivity extends Activity implements
         params.put("TotalMoney", yfmoney);
         params.put("DiscountMoney", zfmoney);
         params.put("OrderPoint", "");
+        params.put("CouponID", payType.CouponID);
+        params.put("CouPonMoney", payType.CouPonMoney);
         switch (paytype) {
             case "wx":
                 params.put("payType", 2);

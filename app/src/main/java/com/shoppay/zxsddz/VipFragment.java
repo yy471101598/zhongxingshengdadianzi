@@ -133,8 +133,11 @@ public class VipFragment extends Fragment {
                     break;
 
                 case 8://优惠券成功
+                    mYhqMsg = (YhqMsg) msg.obj;
+                    tv_sfmoney.setText(StringUtil.twoNum(CommonUtils.del(Double.parseDouble(tv_zhmoney.getText().toString()), Double.parseDouble(mYhqMsg.CouPonMoney)) + ""));
                     break;
                 case 9://优惠券失败
+                    mYhqMsg = null;
                     break;
 
             }
@@ -589,6 +592,14 @@ public class VipFragment extends Fragment {
         rl_pay_jifendkm = (RelativeLayout) view.findViewById(R.id.consumption_rl_jfdk);
         rl_pay_jifenmaxdk = (RelativeLayout) view.findViewById(R.id.consumption_rl_maxdk);
         rl_pay_yue = (RelativeLayout) view.findViewById(R.id.consumption_rl_yue);
+        rl_yhqsao.setOnClickListener(new NoDoubleClickListener() {
+            @Override
+            protected void onNoDoubleClick(View view) {
+                Intent mipca = new Intent(getActivity(), MipcaActivityCapture.class);
+                startActivityForResult(mipca, 000);
+            }
+        });
+
         rl_jiesuan.setOnClickListener(new NoDoubleClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
@@ -599,17 +610,17 @@ public class VipFragment extends Fragment {
                         || et_xfmoney.getText().toString() == null) {
                     Toast.makeText(MyApplication.context, "请输入消费金额",
                             Toast.LENGTH_SHORT).show();
-                } else if (isYue && Double.parseDouble(tv_zhmoney.getText().toString()) - Double.parseDouble(tv_vipyue.getText().toString()) > 0) {
+                } else if (isYue && Double.parseDouble(tv_sfmoney.getText().toString()) - Double.parseDouble(tv_vipyue.getText().toString()) > 0) {
 
                     Toast.makeText(MyApplication.context, "余额不足",
                             Toast.LENGTH_SHORT).show();
                 } else {
                     if (CommonUtils.checkNet(MyApplication.context)) {
-                        if (Double.parseDouble(tv_zhmoney.getText().toString()) - money > 0) {
-                            Toast.makeText(MyApplication.context, "少于折后金额，请检查输入信息",
+                        if (Double.parseDouble(tv_sfmoney.getText().toString()) - money > 0) {
+                            Toast.makeText(MyApplication.context, "少于应付金额，请检查输入信息",
                                     Toast.LENGTH_SHORT).show();
-                        } else if (Double.parseDouble(tv_zhmoney.getText().toString()) - money < 0) {
-                            Toast.makeText(MyApplication.context, "大于折后金额，请检查输入信息",
+                        } else if (Double.parseDouble(tv_sfmoney.getText().toString()) - money < 0) {
+                            Toast.makeText(MyApplication.context, "大于应付金额，请检查输入信息",
                                     Toast.LENGTH_SHORT).show();
                         } else {
 
@@ -672,6 +683,13 @@ public class VipFragment extends Fragment {
         params.put("OrderPoint", (int) CommonUtils.div(Double.parseDouble(tv_zhmoney.getText().toString()), Double.parseDouble(PreferenceHelper.readString(getActivity(), "shoppay", "DiscountPoint", "1")), 2));
         params.put("TotalMoney", et_xfmoney.getText().toString());
         params.put("DiscountMoney", tv_zhmoney.getText().toString());
+        if (null == mYhqMsg) {
+            params.put("CouponID", "0");
+            params.put("CouPonMoney", "0");
+        } else {
+            params.put("CouponID", mYhqMsg.CouponID);
+            params.put("CouPonMoney", mYhqMsg.CouPonMoney);
+        }
 //        0=现金 1=银联 2=微信 3=支付宝 4=其他支付 5=余额(散客禁用)
         if (isMoney) {
             params.put("payType", 0);
@@ -763,6 +781,11 @@ public class VipFragment extends Fragment {
             case 222:
                 if (resultCode == Activity.RESULT_OK) {
                     pay(data.getStringExtra("codedata"));
+                }
+                break;
+            case 000:
+                if (resultCode == Activity.RESULT_OK) {
+                    et_yhq.setText(data.getStringExtra("codedata"));
                 }
                 break;
         }

@@ -261,6 +261,13 @@ public class NumRechargeDialog {
                                     PayType payType = new PayType();
                                     payType.type = "wxpay";
                                     payType.money = et_zfmoney.getText().toString();
+                                    if(null==yhqMsg){
+                                     payType.CouponID="0";
+                                     payType.CouPonMoney="0";
+                                    }else{
+                                        payType.CouponID=yhqMsg.CouponID;
+                                        payType.CouPonMoney=yhqMsg.CouPonMoney;
+                                    }
                                     handler.onResponse(payType);
                                     dialog.dismiss();
                                 } else {
@@ -271,6 +278,13 @@ public class NumRechargeDialog {
                                     PayType payType = new PayType();
                                     payType.type = "zfbpay";
                                     payType.money = et_zfmoney.getText().toString();
+                                    if(null==yhqMsg){
+                                        payType.CouponID="0";
+                                        payType.CouPonMoney="0";
+                                    }else{
+                                        payType.CouponID=yhqMsg.CouponID;
+                                        payType.CouPonMoney=yhqMsg.CouPonMoney;
+                                    }
                                     handler.onResponse(payType);
                                     dialog.dismiss();
                                 } else {
@@ -350,8 +364,8 @@ public class NumRechargeDialog {
             params.put("DiscountMoney", zfmoney);
             params.put("OrderPoint", "");
             if (null == yhqMsg) {
-                params.put("CouponID", 0);
-                params.put("CouPonMoney", 0);
+                params.put("CouponID", "0");
+                params.put("CouPonMoney","0");
             } else {
                 params.put("CouponID", yhqMsg.CouponID);
                 params.put("CouPonMoney", yhqMsg.CouPonMoney);
@@ -501,6 +515,9 @@ public class NumRechargeDialog {
                         LogUtils.d("xxjiesuanS", new String(responseBody, "UTF-8"));
                         JSONObject jso = new JSONObject(new String(responseBody, "UTF-8"));
                         if (jso.getInt("flag") == 1) {
+                            if (null != msgReceiver) {
+                                context.unregisterReceiver(msgReceiver);
+                            }
                             Toast.makeText(context, jso.getString("msg"), Toast.LENGTH_LONG).show();
                             JSONObject jsonObject = (JSONObject) jso.getJSONArray("print").get(0);
                             if (jsonObject.getInt("printNumber") == 0) {
