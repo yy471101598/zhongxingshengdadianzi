@@ -39,7 +39,6 @@ import com.shoppay.zxsddz.bean.VipInfoMsg;
 import com.shoppay.zxsddz.bean.VipServece;
 import com.shoppay.zxsddz.card.ReadCardOpt;
 import com.shoppay.zxsddz.card.ReadCardOptHander;
-import com.shoppay.zxsddz.card.ReadCardOptTv;
 import com.shoppay.zxsddz.db.DBAdapter;
 import com.shoppay.zxsddz.http.InterfaceBack;
 import com.shoppay.zxsddz.tools.ActivityStack;
@@ -569,7 +568,7 @@ public class NumConsumptionActivity extends Activity implements View.OnClickList
     protected void onStop() {
         try {
             if (isVipcar) {
-                new ReadCardOptTv().overReadCard();
+                new ReadCardOptHander().overReadCard();
             } else {
                 new ReadCardOpt().overReadCard();
             }

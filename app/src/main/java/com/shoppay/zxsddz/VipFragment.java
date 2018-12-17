@@ -38,7 +38,6 @@ import com.shoppay.zxsddz.bean.VipInfoMsg;
 import com.shoppay.zxsddz.bean.YhqMsg;
 import com.shoppay.zxsddz.card.ReadCardOpt;
 import com.shoppay.zxsddz.card.ReadCardOptHander;
-import com.shoppay.zxsddz.card.ReadCardOptTv;
 import com.shoppay.zxsddz.http.InterfaceBack;
 import com.shoppay.zxsddz.modle.ImpObtainYhq;
 import com.shoppay.zxsddz.modle.InterfaceMVC;
@@ -423,7 +422,7 @@ public class VipFragment extends Fragment {
         //终止检卡
         try {
             if (isVipcar) {
-                new ReadCardOptTv().overReadCard();
+                new ReadCardOptHander().overReadCard();
             } else {
                 new ReadCardOpt().overReadCard();
             }
