@@ -94,6 +94,15 @@ public class VipFragment extends Fragment {
                     tv_vipyue.setText(info.getMemMoney());
                     tv_vipdengji.setText(info.getLevelName());
                     tv_vipjf.setText(info.getMemPoint());
+                    try {
+                        if (isVipcar) {
+                            new ReadCardOptHander().overReadCard();
+                        } else {
+                            new ReadCardOpt().overReadCard();
+                        }
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                     PreferenceHelper.write(getActivity(), "shoppay", "memid", info.getMemID());
                     PreferenceHelper.write(getActivity(), "shoppay", "vipcar", et_card.getText().toString());
                     PreferenceHelper.write(getActivity(), "shoppay", "Discount", info.getDiscount());

@@ -279,6 +279,7 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
         rl_save.setOnClickListener(new NoDoubleClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
+                LogUtils.d("xx", et_vipcard.getText().toString() + "-------" + tv_tvcard.getText().toString());
                 if (et_vipcard.getText().toString().equals("") && tv_tvcard.getText().toString().equals("")) {
                     Toast.makeText(getApplicationContext(), "请输入会员卡号",
                             Toast.LENGTH_SHORT).show();
@@ -531,6 +532,11 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
                 @Override
                 public void onResponse(Object response) {
                     tv_tvcard.setText(response.toString());
+                    try {
+                        new ReadCardOptHander().overReadCard();
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 @Override
@@ -539,7 +545,22 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
                 }
             });
         } else {
-            new ReadCardOpt(et_vipcard);
+            new ReadCardOptHander(new InterfaceBack() {
+                @Override
+                public void onResponse(Object response) {
+                    et_vipcard.setText(response.toString());
+                    try {
+                        new ReadCardOptHander().overReadCard();
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onErrorResponse(Object msg) {
+
+                }
+            });
         }
     }
 

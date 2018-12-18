@@ -124,6 +124,15 @@ public class BalanceActivity extends FragmentActivity implements
                     tv_vipjifen.setText(info.getMemPoint());
                     tv_vipyue.setText(info.getMemMoney());
                     tv_vipdengji.setText(info.getLevelName());
+                    try {
+                        if (isVipcar) {
+                            new ReadCardOptHander().overReadCard();
+                        } else {
+                            new ReadCardOpt().overReadCard();
+                        }
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                     PreferenceHelper.write(ac, "shoppay", "vipcar", et_card.getText().toString());
                     PreferenceHelper.write(ac, "shoppay", "vipname", tv_vipname.getText().toString());
                     PreferenceHelper.write(ac, "shoppay", "memid", info.getMemID());

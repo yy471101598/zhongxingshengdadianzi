@@ -308,36 +308,36 @@ public class DuihuanjiluActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (isVipcar) {
-            new ReadCardOptHander(new InterfaceBack() {
-                @Override
-                public void onResponse(Object response) {
-                    tv_tvcard.setText(response.toString());
-                    editString = tv_tvcard.getText().toString();
-                    ontainVipInfo();
-                }
-
-                @Override
-                public void onErrorResponse(Object msg) {
-
-                }
-            });
-        } else {
-            new ReadCardOpt(vipEtCard);
-        }
+//        if (isVipcar) {
+//            new ReadCardOptHander(new InterfaceBack() {
+//                @Override
+//                public void onResponse(Object response) {
+//                    tv_tvcard.setText(response.toString());
+//                    editString = tv_tvcard.getText().toString();
+//                    ontainVipInfo();
+//                }
+//
+//                @Override
+//                public void onErrorResponse(Object msg) {
+//
+//                }
+//            });
+//        } else {
+//            new ReadCardOpt(vipEtCard);
+//        }
     }
 
     @Override
     protected void onStop() {
-        try {
-            if (isVipcar) {
-                new ReadCardOptHander().overReadCard();
-            } else {
-                new ReadCardOpt().overReadCard();
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            if (isVipcar) {
+//                new ReadCardOptHander().overReadCard();
+//            } else {
+//                new ReadCardOpt().overReadCard();
+//            }
+//        } catch (RemoteException e) {
+//            e.printStackTrace();
+//        }
         super.onStop();
         if (delayRun != null) {
             //每次editText有变化的时候，则移除上次发出的延迟线程

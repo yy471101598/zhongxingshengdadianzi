@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.EditText;
 
 import com.shoppay.zxsddz.MyApplication;
+import com.shoppay.zxsddz.tools.LogUtils;
 import com.sunmi.payservice.hardware.aidl.HardwareOpt;
 import com.sunmi.payservice.hardware.aidl.ReadCardCallback;
 import com.sunmi.payservice.hardware.aidl.bean.PayCardInfo;
@@ -127,6 +128,7 @@ public class ReadCardOpt extends Activity {
                                 mCardNumber = "0" + mCardNumber;
                             }
                         }
+                        LogUtils.d("xxcard", mCardNumber);
                         textView.setText(mCardNumber);
                     } else {
                         /***************Mag磁条卡*********************/
@@ -137,6 +139,7 @@ public class ReadCardOpt extends Activity {
 //                                mCardNumber = "0" + mCardNumber;
 //                            }
 //                        }
+                        LogUtils.d("xxcard", mCardNumber);
                         textView.setText(mCardNumber);
                     }
                     break;
