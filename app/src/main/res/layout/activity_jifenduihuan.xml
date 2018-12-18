@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/backgroudcolor"
-                android:orientation="vertical"
-    >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backgroudcolor"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:orientation="vertical">
 
     <RelativeLayout
         android:id="@+id/balance_rl_d"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_alignParentBottom="true"
-        android:background="@color/white"
-        >
+        android:background="@color/white">
 
         <TextView
             android:id="@+id/balance_tv_n"
@@ -22,8 +22,7 @@
             android:layout_marginLeft="10dp"
             android:text="兑换总数量："
             android:textColor="@color/text_30"
-            android:textSize="13sp"
-            />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tv_allnum"
@@ -35,8 +34,7 @@
             android:layout_toRightOf="@id/balance_tv_n"
             android:text="0"
             android:textColor="@color/theme_red"
-            android:textSize="13sp"
-            />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/balance_tv_z"
@@ -47,8 +45,7 @@
             android:layout_toRightOf="@id/tv_allnum"
             android:text="兑换总积分："
             android:textColor="@color/text_30"
-            android:textSize="15sp"
-            />
+            android:textSize="15sp" />
 
         <TextView
             android:id="@+id/tv_alljifen"
@@ -59,8 +56,7 @@
             android:layout_toRightOf="@id/balance_tv_z"
             android:text="0"
             android:textColor="@color/theme_red"
-            android:textSize="15sp"
-            />
+            android:textSize="15sp" />
 
         <RelativeLayout
             android:id="@+id/rl_duihuan"
@@ -70,8 +66,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginRight="10dp"
             android:layout_marginBottom="8dp"
-            android:background="@color/theme_red"
-            >
+            android:background="@color/theme_red">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -81,8 +76,7 @@
                 android:paddingRight="15dp"
                 android:text="兑换"
                 android:textColor="@color/white"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
         </RelativeLayout>
     </RelativeLayout>
 
@@ -100,8 +94,7 @@
             android:id="@+id/rl_etcard"
             android:layout_width="match_parent"
             android:layout_height="40.5dp"
-            android:background="@color/white"
-            >
+            android:background="@color/white">
 
             <TextView
                 android:id="@+id/vip_tv_card"
@@ -111,8 +104,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="会员卡号"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <EditText
                 android:id="@+id/vip_et_card"
@@ -127,8 +119,7 @@
                 android:hint="请输入会员卡号"
                 android:textColor="@color/text_30"
                 android:textColorHint="@color/text_66"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <View
                 android:layout_width="match_parent"
@@ -142,8 +133,7 @@
             android:layout_width="match_parent"
             android:layout_height="40.5dp"
             android:background="@color/white"
-            android:visibility="gone"
-            >
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -152,8 +142,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="会员卡号"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/tv_tvcard"
@@ -164,8 +153,7 @@
                 android:layout_marginRight="10dp"
                 android:gravity="center_vertical|right"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <View
                 android:layout_width="match_parent"
@@ -177,8 +165,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="@color/white"
-            >
+            android:background="@color/white">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -187,8 +174,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="会员姓名"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/vip_tv_name"
@@ -198,8 +184,7 @@
                 android:layout_centerVertical="true"
                 android:layout_marginRight="10dp"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
         </RelativeLayout>
 
         <View
@@ -210,8 +195,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="@color/white"
-            >
+            android:background="@color/white">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -220,8 +204,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="会员积分"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/vip_tv_jifen"
@@ -233,8 +216,7 @@
                 android:background="@null"
                 android:gravity="center_vertical|right"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
         </RelativeLayout>
 
         <View
@@ -245,8 +227,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="@color/white"
-            >
+            android:background="@color/white">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -255,8 +236,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="会员余额"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/vip_tv_vipyue"
@@ -268,8 +248,7 @@
                 android:background="@null"
                 android:gravity="center_vertical|right"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
         </RelativeLayout>
 
         <View
@@ -280,8 +259,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="@color/white"
-            >
+            android:background="@color/white">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -290,8 +268,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="会员等级"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/vip_tv_vipdengji"
@@ -303,8 +280,7 @@
                 android:background="@null"
                 android:gravity="center_vertical|right"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
         </RelativeLayout>
 
         <View
@@ -315,8 +291,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="@color/white"
-            >
+            android:background="@color/white">
 
             <TextView
                 android:id="@+id/vip_tv_jifennum"
@@ -326,8 +301,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="礼品编号"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/vip_tv_dingwei"
@@ -343,8 +317,7 @@
                 android:paddingBottom="3dp"
                 android:text="定位"
                 android:textColor="@color/white"
-                android:textSize="13sp"
-                />
+                android:textSize="13sp" />
 
             <EditText
                 android:id="@+id/vip_et_code"
@@ -359,8 +332,7 @@
                 android:hint="请输入或定位礼品编号"
                 android:textColor="@color/text_30"
                 android:textColorHint="@color/text_66"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
         </RelativeLayout>
 
         <View
@@ -374,22 +346,19 @@
             android:layout_height="60dp"
             android:layout_marginTop="5dp"
             android:background="@color/white"
-            android:visibility="gone"
-            >
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_marginLeft="15dp"
-                android:orientation="vertical"
-                >
+                android:orientation="vertical">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    >
+                    android:layout_marginTop="3dp">
 
                     <TextView
                         android:id="@+id/item_tv_shopname"
@@ -397,8 +366,7 @@
                         android:layout_height="wrap_content"
                         android:text="95#汽油"
                         android:textColor="@color/text_30"
-                        android:textSize="15sp"
-                        />
+                        android:textSize="15sp" />
 
                     <TextView
                         android:id="@+id/item_tv_kucunnum"
@@ -408,8 +376,7 @@
                         android:layout_marginRight="15dp"
                         android:text="9"
                         android:textColor="@color/theme_red"
-                        android:textSize="15sp"
-                        />
+                        android:textSize="15sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -418,15 +385,13 @@
                         android:layout_toLeftOf="@id/item_tv_kucunnum"
                         android:text="库存："
                         android:textColor="@color/text_30"
-                        android:textSize="15sp"
-                        />
+                        android:textSize="15sp" />
                 </RelativeLayout>
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
-                    android:layout_marginTop="3dp"
-                    >
+                    android:layout_marginTop="3dp">
 
                     <TextView
                         android:id="@+id/item_tv_money"
@@ -435,8 +400,7 @@
                         android:layout_centerVertical="true"
                         android:text="所需积分："
                         android:textColor="@color/text_30"
-                        android:textSize="14sp"
-                        />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/item_tv_jifen"
@@ -446,8 +410,7 @@
                         android:layout_toRightOf="@id/item_tv_money"
                         android:text="2"
                         android:textColor="@color/theme_red"
-                        android:textSize="14sp"
-                        />
+                        android:textSize="14sp" />
 
                     <ImageView
                         android:id="@+id/item_iv_add"
@@ -456,8 +419,7 @@
                         android:layout_alignParentRight="true"
                         android:layout_centerVertical="true"
                         android:layout_marginRight="10dp"
-                        android:background="@drawable/add"
-                        />
+                        android:background="@drawable/add" />
 
                     <TextView
                         android:id="@+id/item_tv_num"
@@ -470,8 +432,7 @@
                         android:text="0"
                         android:textColor="@color/theme_red"
                         android:textSize="14sp"
-                        android:visibility="gone"
-                        />
+                        android:visibility="gone" />
 
                     <ImageView
                         android:id="@+id/item_iv_del"
@@ -480,8 +441,7 @@
                         android:layout_centerVertical="true"
                         android:layout_toLeftOf="@+id/item_tv_num"
                         android:background="@drawable/del"
-                        android:visibility="gone"
-                        />
+                        android:visibility="gone" />
                 </RelativeLayout>
             </LinearLayout>
         </RelativeLayout>
@@ -495,8 +455,7 @@
             android:cacheColorHint="#00000000"
             android:divider="@color/viewcolor"
             android:dividerHeight="0.5dp"
-            android:scrollbars="none"
-            ></ListView>
+            android:scrollbars="none"></ListView>
 
     </LinearLayout>
 </RelativeLayout>

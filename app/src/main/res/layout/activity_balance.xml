@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/backgroudcolor"
-                android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backgroudcolor"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="50dp"
-        android:orientation="vertical"
-        >
+        android:orientation="vertical">
 
         <include layout="@layout/title_twoicon_back"></include>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="0.5dp"
-            android:background="@color/viewcolor"/>
+            android:background="@color/viewcolor" />
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="@color/white"
-            >
+            android:background="@color/white">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -32,8 +32,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="散客消费"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -42,8 +41,7 @@
                 android:layout_centerVertical="true"
                 android:layout_marginRight="10dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                >
+                android:orientation="horizontal">
 
                 <RelativeLayout
                     android:id="@+id/rl_yes"
@@ -64,16 +62,14 @@
                         android:paddingBottom="3dp"
                         android:text="是"
                         android:textColor="@color/white"
-                        android:textSize="13sp"
-                        />
+                        android:textSize="13sp" />
                 </RelativeLayout>
 
                 <RelativeLayout
                     android:id="@+id/rl_no"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="6dp"
-                    >
+                    android:layout_marginLeft="6dp">
 
                     <TextView
                         android:id="@+id/tv_no"
@@ -86,8 +82,7 @@
                         android:paddingBottom="3dp"
                         android:text="否"
                         android:textColor="@color/text_30"
-                        android:textSize="13sp"
-                        />
+                        android:textSize="13sp" />
                 </RelativeLayout>
             </LinearLayout>
         </RelativeLayout>
@@ -103,15 +98,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="gone"
-            >
+            android:visibility="gone">
 
             <RelativeLayout
                 android:id="@+id/balance_rl_card"
                 android:layout_width="match_parent"
                 android:layout_height="40.5dp"
-                android:background="@color/white"
-                >
+                android:background="@color/white">
 
                 <TextView
                     android:id="@+id/balance_tv_card"
@@ -121,8 +114,7 @@
                     android:layout_marginLeft="10dp"
                     android:text="会员卡号"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <EditText
                     android:id="@+id/balance_et_card"
@@ -137,8 +129,7 @@
                     android:hint="请输入会员卡号"
                     android:textColor="@color/text_30"
                     android:textColorHint="@color/text_66"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <View
                     android:layout_width="match_parent"
@@ -152,8 +143,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="40.5dp"
                 android:background="@color/white"
-                android:visibility="gone"
-                >
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -162,8 +152,7 @@
                     android:layout_marginLeft="10dp"
                     android:text="会员卡号"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <TextView
                     android:id="@+id/tv_tvcard"
@@ -174,8 +163,7 @@
                     android:layout_marginRight="10dp"
                     android:gravity="center_vertical|right"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <View
                     android:layout_width="match_parent"
@@ -188,8 +176,7 @@
                 android:id="@+id/balance_rl_vipname"
                 android:layout_width="match_parent"
                 android:layout_height="40.5dp"
-                android:background="@color/white"
-                >
+                android:background="@color/white">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -198,8 +185,7 @@
                     android:layout_marginLeft="10dp"
                     android:text="会员姓名"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <TextView
                     android:id="@+id/balance_tv_vipname"
@@ -209,8 +195,7 @@
                     android:layout_centerVertical="true"
                     android:layout_marginRight="10dp"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <View
                     android:layout_width="match_parent"
@@ -223,8 +208,7 @@
                 android:id="@+id/balance_rl_vipjifen"
                 android:layout_width="match_parent"
                 android:layout_height="40.5dp"
-                android:background="@color/white"
-                >
+                android:background="@color/white">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -233,8 +217,7 @@
                     android:layout_marginLeft="10dp"
                     android:text="会员积分"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <TextView
                     android:id="@+id/balance_tv_vipjifen"
@@ -245,8 +228,7 @@
                     android:layout_marginRight="10dp"
                     android:background="@null"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <View
                     android:layout_width="match_parent"
@@ -259,8 +241,7 @@
                 android:id="@+id/balance_rl_vipyue"
                 android:layout_width="match_parent"
                 android:layout_height="40.5dp"
-                android:background="@color/white"
-                >
+                android:background="@color/white">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -269,8 +250,7 @@
                     android:layout_marginLeft="10dp"
                     android:text="会员余额"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <TextView
                     android:id="@+id/balance_tv_vipyue"
@@ -281,8 +261,7 @@
                     android:layout_marginRight="10dp"
                     android:background="@null"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <View
                     android:layout_width="match_parent"
@@ -295,8 +274,7 @@
                 android:id="@+id/balance_rl_vipdengji"
                 android:layout_width="match_parent"
                 android:layout_height="40.5dp"
-                android:background="@color/white"
-                >
+                android:background="@color/white">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -305,8 +283,7 @@
                     android:layout_marginLeft="10dp"
                     android:text="会员等级"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <TextView
                     android:id="@+id/balance_tv_vipdengji"
@@ -317,8 +294,7 @@
                     android:layout_marginRight="10dp"
                     android:background="@null"
                     android:textColor="@color/text_30"
-                    android:textSize="15sp"
-                    />
+                    android:textSize="15sp" />
 
                 <View
                     android:layout_width="match_parent"
@@ -332,8 +308,7 @@
             android:layout_width="match_parent"
             android:layout_height="40.5dp"
             android:layout_below="@id/upview"
-            android:background="@color/white"
-            >
+            android:background="@color/white">
 
             <TextView
                 android:id="@+id/tv_shopcode"
@@ -343,8 +318,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="商品条码"
                 android:textColor="@color/text_30"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/vip_tv_dingwei"
@@ -360,8 +334,7 @@
                 android:paddingBottom="3dp"
                 android:text="定位"
                 android:textColor="@color/white"
-                android:textSize="13sp"
-                />
+                android:textSize="13sp" />
 
             <EditText
                 android:id="@+id/balance_et_shopcode"
@@ -376,8 +349,7 @@
                 android:hint="请输入或扫描商品条码"
                 android:textColor="@color/text_30"
                 android:textColorHint="@color/text_66"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
 
             <View
                 android:layout_width="match_parent"
@@ -398,19 +370,19 @@
                 android:layout_weight="1.0"
                 android:background="@color/backgroudcolor"
                 android:cacheColorHint="#00000000"
-                android:scrollbars="none"/>
+                android:scrollbars="none" />
 
             <View
                 android:layout_width="0.5dp"
                 android:layout_height="match_parent"
-                android:background="#cdcdcd"/>
+                android:background="#cdcdcd" />
 
             <FrameLayout
                 android:id="@+id/fragment_container"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="3.0"
-                android:background="@color/white"/>
+                android:background="@color/white" />
         </LinearLayout>
     </LinearLayout>
 
@@ -419,8 +391,7 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_alignParentBottom="true"
-        android:background="@color/white"
-        >
+        android:background="@color/white">
 
         <TextView
             android:id="@+id/balance_tv_n"
@@ -430,8 +401,7 @@
             android:layout_marginLeft="10dp"
             android:text="共"
             android:textColor="@color/text_30"
-            android:textSize="13sp"
-            />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/balance_tv_num"
@@ -443,8 +413,7 @@
             android:layout_toRightOf="@id/balance_tv_n"
             android:text="0"
             android:textColor="@color/theme_red"
-            android:textSize="13sp"
-            />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/balance_tv_m"
@@ -454,8 +423,7 @@
             android:layout_toRightOf="@id/balance_tv_num"
             android:text="件"
             android:textColor="@color/text_30"
-            android:textSize="13sp"
-            />
+            android:textSize="13sp" />
 
         <LinearLayout
             android:id="@+id/balance_li_jifen"
@@ -465,8 +433,7 @@
             android:layout_marginLeft="10dp"
             android:layout_toRightOf="@id/balance_tv_m"
             android:orientation="horizontal"
-            android:visibility="gone"
-            >
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/balance_tv_j"
@@ -475,8 +442,7 @@
                 android:layout_centerVertical="true"
                 android:text="积分："
                 android:textColor="@color/text_30"
-                android:textSize="13sp"
-                />
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/balance_tv_jifen"
@@ -486,8 +452,7 @@
                 android:layout_marginLeft="5dp"
                 android:text="0"
                 android:textColor="@color/theme_red"
-                android:textSize="13sp"
-                />
+                android:textSize="13sp" />
         </LinearLayout>
 
         <TextView
@@ -499,8 +464,7 @@
             android:layout_toRightOf="@id/balance_li_jifen"
             android:text="总价："
             android:textColor="@color/text_30"
-            android:textSize="15sp"
-            />
+            android:textSize="15sp" />
 
         <TextView
             android:id="@+id/balance_tv_money"
@@ -511,8 +475,7 @@
             android:layout_toRightOf="@id/balance_tv_z"
             android:text="0"
             android:textColor="@color/theme_red"
-            android:textSize="15sp"
-            />
+            android:textSize="15sp" />
 
         <RelativeLayout
             android:id="@+id/balance_rl_jiesan"
@@ -522,8 +485,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginRight="10dp"
             android:layout_marginBottom="8dp"
-            android:background="@color/theme_red"
-            >
+            android:background="@color/theme_red">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -533,8 +495,7 @@
                 android:paddingRight="15dp"
                 android:text="结算"
                 android:textColor="@color/white"
-                android:textSize="15sp"
-                />
+                android:textSize="15sp" />
         </RelativeLayout>
     </RelativeLayout>
 </RelativeLayout>
