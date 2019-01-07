@@ -29,9 +29,7 @@ import com.shoppay.zxsddz.bean.Dengji;
 import com.shoppay.zxsddz.bean.SystemQuanxian;
 import com.shoppay.zxsddz.bean.VipInfo;
 import com.shoppay.zxsddz.bean.VipInfoMsg;
-import com.shoppay.zxsddz.card.ReadCardOpt;
 import com.shoppay.zxsddz.card.ReadCardOptHander;
-import com.shoppay.zxsddz.card.ReadCardOptTv;
 import com.shoppay.zxsddz.http.InterfaceBack;
 import com.shoppay.zxsddz.tools.ActivityStack;
 import com.shoppay.zxsddz.tools.BluetoothUtil;
@@ -570,7 +568,7 @@ public class VipCardActivity extends Activity implements View.OnClickListener {
             if (isVipcar) {
                 new ReadCardOptHander().overReadCard();
             } else {
-                new ReadCardOpt().overReadCard();
+                new ReadCardOptHander().overReadCard();
             }
         } catch (RemoteException e) {
             e.printStackTrace();
